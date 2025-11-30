@@ -69,20 +69,22 @@ WSGI_APPLICATION = 'hospital.wsgi.application'
 
 
 # Database
+import os
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Hospital',
-        'USER': 'root',
-        'PASSWORD': '210524103@Hsxyg',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         }
     }
 }
+
 
 
 # Password validation
@@ -118,6 +120,8 @@ USE_TZ = True
 
 # URL used in templates: {% static 'css/main.css' %}
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 # Folder where your "static" directory lives: BASE_DIR / 'static'
 # e.g. hospital/static/css/main.css
@@ -134,3 +138,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Auth
 
 LOGIN_URL = '/admin/login/'
+
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
