@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}My Health Dashboard · Campus Medical Center{% endblock %}
+
+{% block content %}
+<div class="page-container max-width">
+
+    {% if patient %}
+    
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" style="font-size: 2.2rem;">
+                    Welcome, {{ patient.first_name }} {{ patient.last_name }}
+                </h1>
+                <p class="page-subtitle" style="font-size: 1.2rem;">
+                    Stay on top of your appointments, visits, billing, and medications in one simple view.
+                </p>
+                <div class="patient-header-meta" style="font-size: 1rem;">
+                    <span class="meta-pill">
+                        {{ patient.mrn }}
+                    </span>
+                    </span>
+                    <span class="meta-pill">
+                        {{ patient.dob|date:"M d, Y" }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="page-actions">
+                <a href="{% url 'appointments:appointment_add' %}" class="btn btn-primary" style="font-size: 1rem;">
+                    + Book Appointment
+                </a>
+            </div>
+        </div>
+
+        <!-- Patient Summary Card -->
+        <div class="card mb-lg">
+            <div class="card-header">
+                <h2 class="card-title" style="font-size: 1.6rem;">Your Details</h2>
+                <p class="card-subtitle" style="font-size: 1.05rem;">
+                    Please make sure your contact information is up to date.
+                </p>
+            </div>
+            <div class="card-body summary-grid" style="font-size: 1.05rem;">
+                <div class="summary-item">
+                    <div class="summary-label" style="font-weight: 600;">Phone</div>
+                    <div class="summary-value">
+                        {{ patient.phone|default:"—" }}
+                    </div>
+                </div>
+
+                <div class="summary-item">
+                    <div class="summary-label" style="font-weight: 600;">Email</div>
+                    <div class="summary-value">
+                        {{ patient.email|default:"—" }}
+                    </div>
+                </div>
+
+                <div class="summary-item">
+                    <div class="summary-label" style="font-weight: 600;">Address</div>
+                    <div class="summary-value">
+                        {% if patient.address %}
+                            {{ patient.address }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="summary-item">
+                    <div class="summary-label" style="font-weight: 600;">Primary Insurance</div>
+                    <div class="summary-value">
+                        {% if primary_insurance %}
+                            <span class="summary-primary">
+                                {{ primary_insurance.payer_name }}
+                            </span>
+                            {% if primary_insurance.plan_name %}
+                                <span class="summary-secondary">
+                                    · {{ primary_insurance.plan_name }}
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Four-column dashboard -->
+        <div class="dashboard-grid">
+
+            <!-- Upcoming Appointments -->
+            <section class="card">
+                <div class="card-header card-header-with-action">
+                    <div>
+                        <h3 class="card-title-sm" style="font-size: 1.4rem;">Upcoming Appointments</h3>
+                        <p class="card-subtitle-sm" style="font-size: 1.05rem;">
+                            View your next visits and manage your schedule.
+                        </p>
+                    </div>
+                    <div class="card-actions">
+                        <a href="{% url 'appointments:appointment_add' %}" class="btn btn-sm btn-outline" style="font-size: 0.95rem;">
+                            + Book Appointment
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body" style="font-size: 1.05rem;">
+                    {% if upcoming_appointments %}
+                        <ul class="list-vertical list-compact">
+                            {% for appt in upcoming_appointments %}
+                                <li class="list-item">
+                                    <div class="list-item-main">
+                                        <div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
+                                            {{ appt.appointment_date|date:"M d, Y" }}
+                                            · {{ appt.start_time|time:"h:i A" }}
+                                        </div>
+                                        <div class="list-item-sub">
+                                            <div class="list-row">
+                                                <span class="list-label">Provider</span>
+                                                <span class="list-value">
+                                                    Dr. {{ appt.doctor.first_name }} {{ appt.doctor.last_name }}
+                                                </span>
+                                            </div>
+                                            <div class="list-row">
+                                                <span class="list-label">Reason</span>
+                                                <span class="list-value">
+                                                    {{ appt.reason|default:"—" }}
+                                                </span>
+                                            </div>
+                                            <div class="list-row">
+                                                <span class="list-label">Status</span>
+                                                <span class="badge">
+                                                    {{ appt.get_status_display }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">
+                            You have no upcoming appointments yet.
+                            <a href="{% url 'appointments:appointment_add' %}" class="inline-link">
+                                Book your first appointment.
+                            </a>
+                        </p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Recent Encounters -->
+            <section class="card">
+                <div class="card-header">
+                    <h3 class="card-title-sm" style="font-size: 1.4rem;">Recent Visits</h3>
+                    <p class="card-subtitle-sm" style="font-size: 1.05rem;">
+                        A quick snapshot of your most recent clinic visits.
+                    </p>
+                </div>
+                <div class="card-body" style="font-size: 1.05rem;">
+                    {% if recent_encounters %}
+                        <ul class="list-vertical list-compact">
+                            {% for enc in recent_encounters %}
+                                <li class="list-item">
+                                    <div class="list-item-main">
+                                        <div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
+                                            {{ enc.encounter_date|date:"M d, Y" }}
+                                            {% if enc.encounter_type %}
+                                                · {{ enc.encounter_type }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="list-item-sub">
+                                            {% if enc.doctor %}
+                                                <div class="list-row">
+                                                    <span class="list-label">Provider</span>
+                                                    <span class="list-value">
+                                                        Dr. {{ enc.doctor.first_name }} {{ enc.doctor.last_name }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                            {% if enc.location %}
+                                                <div class="list-row">
+                                                    <span class="list-label">Location</span>
+                                                    <span class="list-value">
+                                                        {{ enc.location }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                            {% if enc.reason %}
+                                                <div class="list-row">
+                                                    <span class="list-label">Reason</span>
+                                                    <span class="list-value">
+                                                        {{ enc.reason }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">You have no recent visits.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Recent Billing -->
+            <section class="card">
+                <div class="card-header">
+                    <h3 class="card-title-sm" style="font-size: 1.4rem;">Recent Billing</h3>
+                    <p class="card-subtitle-sm" style="font-size: 1.05rem;">
+                        Track your latest bills and payment status.
+                    </p>
+                </div>
+                <div class="card-body" style="font-size: 1.05rem;">
+                    {% if recent_bills %}
+                        <ul class="list-vertical list-compact">
+                            {% for bill in recent_bills %}
+                                <li class="list-item">
+                                    <div class="list-item-main">
+                                        <div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
+                                            Bill #{{ bill.bill_id }}
+                                            · {{ bill.bill_date|date:"M d, Y" }}
+                                        </div>
+                                        <div class="list-item-sub">
+                                            <div class="list-row">
+                                                <span class="list-label">Amount</span>
+                                                <span class="list-value">
+                                                    {{ bill.total_amount }}
+                                                </span>
+                                            </div>
+                                            <div class="list-row">
+                                                <span class="list-label">Status</span>
+                                                <span class="badge">
+                                                    {{ bill.get_status_display }}
+                                                </span>
+                                            </div>
+                                            {% if bill.payment_due %}
+                                                <div class="list-row">
+                                                    <span class="list-label">Due</span>
+                                                    <span class="list-value">
+                                                        {{ bill.payment_due|date:"M d, Y" }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No recent billing activity.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Medications -->
+            <section class="card">
+                <div class="card-header">
+                    <h3 class="card-title-sm" style="font-size: 1.4rem;">Medications</h3>
+                    <p class="card-subtitle-sm" style="font-size: 1.05rem;">
+                        Review your most recently prescribed medications.
+                    </p>
+                </div>
+                <div class="card-body" style="font-size: 1.05rem;">
+                    {% if recent_medications %}
+                        <ul class="list-vertical list-compact">
+                            {% for presc in recent_medications %}
+                                <li class="list-item">
+                                    <div class="list-item-main">
+                                        <div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
+                                            {{ presc.medication.generic_name }}
+                                            {% if presc.medication.brand_name %}
+                                                ({{ presc.medication.brand_name }})
+                                            {% endif %}
+                                            · {{ presc.medication.form }}
+                                            {% if presc.medication.strength %}
+                                                · {{ presc.medication.strength }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="list-item-sub">
+                                            <div class="list-row">
+                                                <span class="list-label">Dosage</span>
+                                                <span class="list-value">
+                                                    {{ presc.dosage }}
+                                                </span>
+                                            </div>
+                                            <div class="list-row">
+                                                <span class="list-label">Frequency</span>
+                                                <span class="list-value">
+                                                    {{ presc.frequency_per_day }}×/day
+                                                    for {{ presc.duration_days }} days
+                                                </span>
+                                            </div>
+                                            {% if presc.instructions %}
+                                                <div class="list-row">
+                                                    <span class="list-label">Instructions</span>
+                                                    <span class="list-value">
+                                                        {{ presc.instructions }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                            <div class="list-row">
+                                                <span class="list-label">Prescribed</span>
+                                                <span class="list-value">
+                                                    {{ presc.created_at|date:"M d, Y" }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No medications listed.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+        </div>
+    {% else %}
+        <!-- Fallback if no patient record -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" style="font-size: 2rem;">My Health Dashboard</h1>
+                <p class="page-subtitle" style="font-size: 1.1rem;">
+                    No patient record is linked to this account yet.
+                </p>
+            </div>
+        </div>
+        <p class="text-muted" style="font-size: 1.05rem;">
+            Please contact the clinic if you believe this is an error.
+        </p>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{# accounts/templates/accounts/signup.html #}
+{% extends "base.html" %}
+
+{% block title %}Create Account · Campus Medical Center{% endblock %}
+
+{% block content %}
+<div class="page-container max-width">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Create Your Account</h1>
+            <p class="page-subtitle">
+                Attention: Please contact the staff to create your doctor account!!!
+            </p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="mb-md">
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Signup Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Sign Up</h2>
+            <p class="card-subtitle">
+                Start creating your patient account.
+            </p>
+        </div>
+
+        <div class="card-body">
+            <form method="post" class="form-vertical" novalidate>
+                {% csrf_token %}
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Start</button>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-ghost">Back to Sign In</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-footer">
+            <p class="text-muted">
+                Already registered?
+                <a href="{% url 'accounts:login' %}">Sign in</a>.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

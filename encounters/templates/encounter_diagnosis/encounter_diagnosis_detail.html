@@ -1,0 +1,17 @@
+
+{% extends "base.html" %}
+{% block title %}Encounter Diagnosis Detail{% endblock %}
+
+{% block content %}
+<h2>Encounter Diagnosis Details</h2>
+
+<ul class="list-group mb-3">
+    <li class="list-group-item"><strong>ID:</strong> {{ encounterdiagnosis.id }}</li>
+    <li class="list-group-item"><strong>Encounter:</strong> {{ encounterdiagnosis.encounter.id }}</li>
+    <li class="list-group-item"><strong>Diagnosis:</strong> {{ encounterdiagnosis.diagnosis.name }}</li>
+</ul>
+
+<a href="{% url 'encounterdiagnosis_edit' encounterdiagnosis.id %}" class="btn btn-warning">Edit</a>
+<a href="{% url 'encounterdiagnosis_list' %}" class="btn btn-secondary">Back</a>
+
+{% endblock %}

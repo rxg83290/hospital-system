@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ form_title }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">{{ form_title }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        {{ form.bill.label_tag }} {{ form.bill }}
+    </div>
+    <div class="mb-3">
+        {{ form.amount.label_tag }} {{ form.amount }}
+    </div>
+    <div class="mb-3">
+        {{ form.method.label_tag }} {{ form.method }}
+    </div>
+    <div class="mb-3">
+        {{ form.status.label_tag }} {{ form.status }}
+    </div>
+    <div class="mb-3">
+        {{ form.reference.label_tag }} {{ form.reference }}
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{% url 'billing:payment_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

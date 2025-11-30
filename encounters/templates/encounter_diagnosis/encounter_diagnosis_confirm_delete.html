@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Delete Encounter Diagnosis{% endblock %}
+
+{% block content %}
+<h2 class="text-danger">Confirm Delete</h2>
+
+<p>Are you sure you want to delete this encounter diagnosis?</p>
+
+<ul>
+    <li>ID: {{ encounterdiagnosis.id }}</li>
+    <li>Encounter: {{ encounterdiagnosis.encounter.id }}</li>
+    <li>Diagnosis: {{ encounterdiagnosis.diagnosis.name }}</li>
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url 'encounterdiagnosis_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+
+{% endblock %}

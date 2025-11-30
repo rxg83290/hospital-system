@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}{{ title|default:"Insurance Policies" }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    {% if patient %}
+        <h2>{{ title }}</h2>
+        <div>
+            <a href="{% url 'patients:patient_detail' patient.patient_id %}" class="btn btn-secondary">Back to Patient</a>
+            <a href="{% url 'patients:policy_add_for_patient' patient.patient_id %}" class="btn btn-success">Add Policy</a>
+        </div>
+    {% else %}
+        <h2>Insurance Policies</h2>
+        <a href="{% url 'patients:policy_add' %}" class="btn btn-success">Add Policy</a>
+    {% endif %}
+</div>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search by policy number, payer, plan, or patient...">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+    </div>
+</form>
+
+<style>
+.compact-table td, .compact-table th {
+    padding: 3px 6px !important;
+    font-size: 14px !important;
+    line-height: 1.1 !important;
+}
+.compact-table .btn-sm {
+    padding: 1px 4px !important;
+    font-size: 12px !important;
+}
+</style>
+
+<table class="table table-sm table-hover table-striped compact-table">
+    <thead class="table-dark">
+        <tr>
+            <th>Policy Number</th>
+            {% if not patient %}
+            <th>Patient</th>
+            {% endif %}
+            <th>Payer</th>
+            <th>Status</th>
+            <th>Coverage %</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for policy in policies %}
+        <tr>
+            <td>{{ policy.policy_number }}</td>
+            {% if not patient %}
+            <td>{{ policy.patient.first_name }} {{ policy.patient.last_name }}</td>
+            {% endif %}
+            <td>{{ policy.payer_name }}</td>
+            <td>{{ policy.get_status_display }}</td>
+            <td>{{ policy.coverage_percent }}%</td>
+            <td>
+                <a href="{% url 'patients:policy_detail' policy.policy_id %}?next={{ request.path }}" class="btn btn-info btn-sm">View</a>
+                <a href="{% url 'patients:policy_edit' policy.policy_id %}?next={{ request.path }}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'patients:policy_delete' policy.policy_id %}?next={{ request.path }}" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="{% if patient %}5{% else %}6{% endif %}" class="text-center">No policies found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<nav>
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Previous</span></li>
+    {% endif %}
+
+    {% for num in paginator.page_range %}
+      {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+      {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+        <li class="page-item"><a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Next</span></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% endblock %}
+

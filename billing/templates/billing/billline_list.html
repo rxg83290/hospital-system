@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Bill Lines{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Bill Lines</h2>
+    <a href="{% url 'billing:billline_add' %}" class="btn btn-primary mb-3">Add Bill Line</a>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Bill</th>
+                <th>Type</th>
+                <th>Procedure</th>
+                <th>Medication</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Line Total</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in object_list %}
+            <tr>
+                <td>{{ line.bill_line_id }}</td>
+                <td>{{ line.bill }}</td>
+                <td>{{ line.line_type }}</td>
+                <td>{% if line.procedure %}{{ line.procedure.name }}{% endif %}</td>
+                <td>{% if line.medication %}{{ line.medication.generic_name }}{% endif %}</td>
+                <td>{{ line.description1 }}</td>
+                <td>{{ line.quantity|floatformat:2 }}</td>
+                <td>{{ line.unit_price|floatformat:2 }}</td>
+                <td>{{ line.calculated_total|floatformat:2 }}</td>
+                <td>{{ line.created_at }}</td>
+                <td>
+                    <a href="{% url 'billing:billline_edit' line.bill_line_id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'billing:billline_delete' line.bill_line_id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="11" class="text-center">No bill lines found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

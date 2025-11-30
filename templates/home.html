@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Home – Campus Medical Center{% endblock %}
+
+{% block page_header %}
+<header class="page-header home-hero">
+    <div class="hero-left">
+        <p class="hero-eyebrow">Campus Medical Center • Patient Portal</p>
+
+        <h1 class="page-title">
+            <span class="hero-motto">Afya Bora, Maisha Bora</span>
+        </h1>
+
+        <p class="page-subtitle">
+            (Better Health, Better Life) – your digital gateway to convenient, secure healthcare access.
+        </p>
+
+        <div class="hero-tagline">
+            <span class="asclepius-icon" aria-hidden="true">⚕️</span>
+            <div class="asclepius-text">
+                <strong>Asclepius</strong>, the ancient symbol of healing, reminds us that caring for the body,
+                mind, and spirit is one united journey.
+                <span class="hero-quote">
+                    “ἡ ὑγίεια πᾶν ἐστίν” – Health is everything.
+                </span>
+            </div>
+        </div>
+
+        <div class="hero-actions">
+            <a href="{% url 'accounts:login' %}" class="btn btn-primary">
+                Sign In
+            </a>
+            <a href="{% url 'accounts:signup' %}" class="btn btn-outline">
+                Create an Account
+            </a>
+        </div>
+
+        <p class="hero-note">
+            Hakuna karatasi zisizohitajika — access your care anytime, anywhere, securely.
+        </p>
+    </div>
+
+    <div class="hero-right">
+        <div class="hero-stat-card card">
+            <div class="card-header">
+                <h2 class="card-title">Your Health Hub</h2>
+                <span class="card-meta">Everything in one place</span>
+            </div>
+            <div class="card-body">
+                <ul class="overview-list compact">
+                    <li>
+                        <span class="label">Appointments</span>
+                        <span class="value">Track and plan visits</span>
+                    </li>
+                    <li>
+                        <span class="label">Results</span>
+                        <span class="value">View test summaries</span>
+                    </li>
+                    <li>
+                        <span class="label">Medications</span>
+                        <span class="value">Manage prescriptions</span>
+                    </li>
+                    <li>
+                        <span class="label">Billing</span>
+                        <span class="value">Clear statements</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Intentionally left empty – hero is the star of this page -->
+{% endblock %}

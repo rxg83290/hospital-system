@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Diagnosis List{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Diagnosis List</h2>
+    <a href="{% url 'encounters:diagnosis_add' %}" class="btn btn-success">Add Diagnosis</a>
+</div>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control"
+               placeholder="Search by code or name">
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
+    </div>
+</form>
+
+
+<style>
+.compact-table td, .compact-table th {
+    padding: 3px 6px !important;
+    font-size: 14px !important;
+    line-height: 1.1 !important;
+}
+
+.compact-table .btn-sm {
+    padding: 1px 4px !important;
+    font-size: 12px !important;
+}
+</style>
+
+
+<table class="table table-sm table-hover table-striped compact-table">
+
+    <thead class="table-dark">
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in diagnoses %}
+        <tr>
+            <td>{{ d.code }}</td>
+            <td>{{ d.name }}</td>
+            <td>{{ d.description|truncatewords:10 }}</td>
+            <td>
+                <a href="{% url 'encounters:diagnosis_edit' d.diagnosis_id %}"
+                   class="btn btn-primary btn-sm">Edit</a>
+                <a href="{% url 'encounters:diagnosis_delete' d.diagnosis_id %}"
+                   class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">No diagnosis found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- page -->
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                <li class="page-item"><a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+
+
+{% endblock %}

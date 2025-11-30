@@ -1,0 +1,512 @@
+{# doctors/templates/doctors/doctor_dashboard.html #}
+{% extends "base.html" %}
+
+{% block title %}Doctor Clinical Dashboard · Campus Medical Center{% endblock %}
+
+{% block content %}
+<div class="page-container max-width">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                {% if doctor %}
+                    Welcome, Dr. {{ doctor.first_name }} {{ doctor.last_name }}
+                {% else %}
+                    Doctor Clinical Dashboard
+                {% endif %}
+            </h1>
+            <p class="page-subtitle">
+                Find a patient, review their encounters, update clinical notes, prescribe medications, and view billing.
+            </p>
+        </div>
+
+        {% if doctor %}
+            <div class="page-header-aside">
+                <div class="pill pill-muted">
+                    {{ doctor.specialization }}
+                    {% if doctor.department %}
+                        &middot; {{ doctor.department.name }}
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if doctor %}
+        <!-- Today's Schedule -->
+        <div class="card mb-lg">
+            <div class="card-header">
+                <h2 class="card-title">Today's Schedule</h2>
+                <p class="card-subtitle">
+                    {{ today|date:"M d, Y" }} &middot;
+                    {% if todays_appointments %}
+                        {{ todays_appointments|length }} appointment{{ todays_appointments|length|pluralize }}
+                    {% else %}
+                        No appointments scheduled for today.
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if todays_appointments %}
+                <div class="card-body">
+                    <ul class="list-vertical">
+                        {% for appt in todays_appointments %}
+                            <li class="list-item">
+                                <div class="list-item-main">
+                                    <div class="list-item-title">
+                                        {{ appt.start_time|time:"g:i A" }} – {{ appt.end_time|time:"g:i A" }}
+                                        &middot;
+                                        {{ appt.patient.first_name }} {{ appt.patient.last_name }}
+                                        {% if appt.patient.mrn %}
+                                            (MRN {{ appt.patient.mrn }})
+                                        {% endif %}
+                                    </div>
+                                    <div class="list-item-sub">
+                                        {% if appt.reason %}
+                                            Reason: {{ appt.reason }} &middot;
+                                        {% endif %}
+                                        Status:
+                                        <span class="badge">{{ appt.get_status_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="list-item-actions">
+                                    <a
+                                        href="{% url 'appointments:appointment_detail' appt.pk %}"
+                                        class="btn btn-xs btn-outline"
+                                    >
+                                        View
+                                    </a>
+                                    <a
+                                        href="{% url 'doctors:dashboard' %}?q={{ appt.patient.mrn|urlencode }}"
+                                        class="btn btn-xs btn-primary"
+                                    >
+                                        Open Patient
+                                    </a>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Search Card -->
+    <div class="card mb-lg">
+        <div class="card-header">
+            <h2 class="card-title">Find a Patient</h2>
+            <p class="card-subtitle">
+                Search by name, MRN, phone, or email.
+            </p>
+        </div>
+        <div class="card-body">
+            <form method="get" class="search-form">
+                <div class="search-input-group">
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ query }}"
+                        placeholder="Start typing a name, MRN, phone, or email…"
+                        class="input-text"
+                    />
+                    <button type="submit" class="btn btn-primary">
+                        Search
+                    </button>
+                </div>
+            </form>
+
+            {% if search_error %}
+                <p class="text-muted mt-sm">{{ search_error }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Only show dashboard if a patient was resolved #}
+    {% if patient %}
+        <!-- Patient Summary -->
+        <div class="card mb-lg">
+            <div class="card-header">
+                <h2 class="card-title">
+                    {{ patient.first_name }} {{ patient.last_name }}
+                </h2>
+                <p class="card-subtitle">
+                    MRN: {{ patient.mrn }} &middot;
+                    DOB: {{ patient.dob|date:"M d, Y" }}
+                </p>
+            </div>
+            <div class="card-body grid-2-cols">
+                <div class="summary-item">
+                    <div class="summary-label">Phone</div>
+                    <div class="summary-value">{{ patient.phone|default:"—" }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Email</div>
+                    <div class="summary-value">{{ patient.email|default:"—" }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Address</div>
+                    <div class="summary-value">
+                        {% if patient.address %}
+                            {{ patient.address }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Primary Insurance</div>
+                    <div class="summary-value">
+                        {% with patient.policies.all|first as primary_policy %}
+                            {% if primary_policy %}
+                                {{ primary_policy.payer_name }} – {{ primary_policy.plan_name }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Doctor Workbench -->
+        <div class="dashboard-grid">
+
+            {# Encounters list for this patient #}
+            <section class="card">
+                <div class="card-header">
+                    <h3 class="card-title-sm">Encounters</h3>
+                    <p class="card-subtitle">
+                        Select an encounter to review and update details.
+                    </p>
+                </div>
+                <div class="card-body">
+                    {% if encounters %}
+                        <ul class="list-vertical">
+                            {% for enc in encounters %}
+                                <li class="list-item {% if active_encounter and active_encounter.encounter_id == enc.encounter_id %}is-active{% endif %}">
+                                    <a
+                                        href="?q={{ query|urlencode }}&patient_id={{ patient.id }}&encounter_id={{ enc.encounter_id }}"
+                                        class="list-item-main list-item-link"
+                                    >
+                                        <div class="list-item-title">
+                                            {{ enc.encounter_date|date:"M d, Y" }}
+                                            · {{ enc.get_visit_type_display }}
+                                        </div>
+                                        <div class="list-item-sub">
+                                            With Dr. {{ enc.doctor.first_name }} {{ enc.doctor.last_name }}
+                                            {% if enc.diagnosis_summary %}
+                                                <br>Dx: {{ enc.diagnosis_summary }}
+                                            {% endif %}
+                                            {% if enc.treatment_plan %}
+                                                <br>Plan: {{ enc.treatment_plan|truncatechars:80 }}
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No encounters found for this patient.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            {# Encounter details + editable clinical notes #}
+            <section class="card">
+                <div class="card-header">
+                    <h3 class="card-title-sm">Encounter Details &amp; Notes</h3>
+                </div>
+                <div class="card-body">
+                    {% if active_encounter %}
+                        <div class="mb-md">
+                            <div class="summary-item">
+                                <div class="summary-label">Date</div>
+                                <div class="summary-value">
+                                    {{ active_encounter.encounter_date|date:"M d, Y" }}
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Visit Type</div>
+                                <div class="summary-value">
+                                    {{ active_encounter.get_visit_type_display }}
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Doctor</div>
+                                <div class="summary-value">
+                                    Dr. {{ active_encounter.doctor.first_name }} {{ active_encounter.doctor.last_name }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <form method="post" class="stacked-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                            <input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
+                            <input type="hidden" name="action" value="update_encounter">
+
+                            <div class="form-group">
+                                <label for="id_diagnosis_summary" class="form-label">Diagnosis Summary</label>
+                                <textarea
+                                    id="id_diagnosis_summary"
+                                    name="diagnosis_summary"
+                                    rows="2"
+                                    class="input-textarea"
+                                >{{ active_encounter.diagnosis_summary }}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_treatment_plan" class="form-label">Treatment Plan</label>
+                                <textarea
+                                    id="id_treatment_plan"
+                                    name="treatment_plan"
+                                    rows="3"
+                                    class="input-textarea"
+                                >{{ active_encounter.treatment_plan }}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_notes" class="form-label">Clinical Notes</label>
+                                <textarea
+                                    id="id_notes"
+                                    name="notes"
+                                    rows="4"
+                                    class="input-textarea"
+                                >{{ active_encounter.notes }}</textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    Save Encounter Notes
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <p class="text-muted">
+                            Select an encounter from the list to view and edit details.
+                        </p>
+                    {% endif %}
+                </div>
+            </section>
+
+            {# Medications for the active encounter + add prescription #}
+            <section class="card">
+                <div class="card-header">
+                    <h3 class="card-title-sm">Medications for Encounter</h3>
+                </div>
+                <div class="card-body">
+                    {% if active_encounter %}
+                        {% if encounter_prescriptions %}
+                            <ul class="list-vertical mb-md">
+                                {% for presc in encounter_prescriptions %}
+                                    <li class="list-item">
+                                        <div class="list-item-main">
+                                            <div class="list-item-title">
+                                                {{ presc.medication.generic_name }}
+                                                {% if presc.medication.brand_name %}
+                                                    ({{ presc.medication.brand_name }})
+                                                {% endif %}
+                                                – {{ presc.medication.form }}
+                                                {% if presc.medication.strength %}
+                                                    · {{ presc.medication.strength }}
+                                                {% endif %}
+                                            </div>
+                                            <div class="list-item-sub">
+                                                Dosage: {{ presc.dosage }}<br>
+                                                {{ presc.frequency_per_day }}×/day
+                                                for {{ presc.duration_days }} days
+                                                {% if presc.instructions %}
+                                                    <br>Instructions: {{ presc.instructions }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No medications prescribed in this encounter yet.</p>
+                        {% endif %}
+
+                        <hr class="divider">
+
+                        <h4 class="card-title-xs mb-sm">Add Medication</h4>
+                        <form method="post" class="stacked-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                            <input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
+                            <input type="hidden" name="action" value="add_prescription">
+
+                            <div class="form-group">
+                                <label for="id_medication" class="form-label">Medication</label>
+                                <select id="id_medication" name="medication_id" class="input-select" required>
+                                    <option value="">Select medication…</option>
+                                    {% for med in medication_options %}
+                                        <option value="{{ med.medication_id }}">
+                                            {{ med.generic_name }}
+                                            {% if med.brand_name %}
+                                                ({{ med.brand_name }})
+                                            {% endif %}
+                                            {% if med.strength %}
+                                                – {{ med.strength }}
+                                            {% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group grid-3-cols">
+                                <div>
+                                    <label for="id_dosage" class="form-label">Dosage</label>
+                                    <input
+                                        type="text"
+                                        id="id_dosage"
+                                        name="dosage"
+                                        class="input-text"
+                                        placeholder="e.g. 1 tablet"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label for="id_frequency" class="form-label">Times per Day</label>
+                                    <input
+                                        type="number"
+                                        id="id_frequency"
+                                        name="frequency_per_day"
+                                        class="input-text"
+                                        min="1"
+                                        value="1"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label for="id_duration" class="form-label">Duration (days)</label>
+                                    <input
+                                        type="number"
+                                        id="id_duration"
+                                        name="duration_days"
+                                        class="input-text"
+                                        min="1"
+                                        value="7"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_instructions" class="form-label">Instructions</label>
+                                <input
+                                    type="text"
+                                    id="id_instructions"
+                                    name="instructions"
+                                    class="input-text"
+                                    placeholder="e.g. After meals, avoid alcohol…"
+                                />
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-secondary">
+                                    Add Medication
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <p class="text-muted">
+                            Select an encounter to review and prescribe medications.
+                        </p>
+                    {% endif %}
+                </div>
+            </section>
+
+            {# Billing summary for the active encounter #}
+            <section class="card">
+                <div class="card-header">
+                    <h3 class="card-title-sm">Billing for Encounter</h3>
+                </div>
+                <div class="card-body">
+                    {% if active_encounter %}
+                        {% if encounter_bill %}
+                            <div class="mb-md">
+                                <div class="summary-item">
+                                    <div class="summary-label">Bill #</div>
+                                    <div class="summary-value">{{ encounter_bill.bill_id }}</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-label">Bill Date</div>
+                                    <div class="summary-value">
+                                        {{ encounter_bill.bill_date|date:"M d, Y" }}
+                                    </div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-label">Total Amount</div>
+                                    <div class="summary-value">
+                                        {{ encounter_bill.total_amount }}
+                                    </div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-label">Status</div>
+                                    <div class="summary-value">
+                                        <span class="badge">{{ encounter_bill.get_status_display }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if encounter_bill.bill_lines.all %}
+                                <h4 class="card-title-xs mb-sm">Bill Line Items</h4>
+                                <ul class="list-vertical mb-md">
+                                    {% for line in encounter_bill.bill_lines.all %}
+                                        <li class="list-item">
+                                            <div class="list-item-main">
+                                                <div class="list-item-title">
+                                                    {% if line.line_type == 'MEDICATION' and line.medication %}
+                                                        {{ line.medication.generic_name }}
+                                                        {% if line.medication.brand_name %}
+                                                            ({{ line.medication.brand_name }})
+                                                        {% endif %}
+                                                    {% elif line.line_type == 'PROCEDURE' and line.procedure %}
+                                                        {{ line.procedure.name }}
+                                                    {% else %}
+                                                        {{ line.description1|default:"Service" }}
+                                                    {% endif %}
+                                                </div>
+                                                <div class="list-item-sub">
+                                                    {{ line.quantity }} × {{ line.unit_price }}
+                                                    = {{ line.calculated_total }}
+                                                    <br>Type: {{ line.get_line_type_display }}
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">
+                                No bill exists yet for this encounter.
+                            </p>
+                        {% endif %}
+
+                        <form method="post" class="mt-md">
+                            {% csrf_token %}
+                            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                            <input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
+                            <input type="hidden" name="action" value="sync_billing">
+
+                            <p class="text-muted mb-sm">
+                                Synchronize billing with the current encounter notes, procedures, and medications.
+                            </p>
+
+                            <button type="submit" class="btn btn-outline">
+                                Update / Generate Bill for Encounter
+                            </button>
+                        </form>
+                    {% else %}
+                        <p class="text-muted">
+                            Select an encounter to view billing details.
+                        </p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

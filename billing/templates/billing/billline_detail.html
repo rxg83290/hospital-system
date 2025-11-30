@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}BillLine Detail{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">BillLine {{ billline.bill_line_id }}</h2>
+
+<table class="table table-bordered">
+    <tr><th>Bill</th><td>{{ billline.bill.bill_id }}</td></tr>
+    <tr><th>Type</th><td>{{ billline.line_type }}</td></tr>
+    <tr><th>Procedure</th><td>{% if billline.procedure %}{{ billline.procedure.name }}{% endif %}</td></tr>
+    <tr><th>Medication</th><td>{% if billline.medication %}{{ billline.medication.generic_name }}{% endif %}</td></tr>
+    <tr><th>Description</th><td>{{ billline.description1 }}</td></tr>
+    <tr><th>Quantity</th><td>{{ billline.quantity }}</td></tr>
+    <tr><th>Unit Price</th><td>{{ billline.unit_price }}</td></tr>
+    <tr><th>Line Total</th><td>{{ billline.line_total }}</td></tr>
+    <tr><th>Created At</th><td>{{ billline.created_at|date:"Y-m-d H:i" }}</td></tr>
+</table>
+
+<a href="{% url 'billing:billline_edit' billline.bill_line_id %}" class="btn btn-warning">Edit</a>
+<a href="{% url 'billing:billline_delete' billline.bill_line_id %}" class="btn btn-danger">Delete</a>
+<a href="{% url 'billing:billline_list' %}" class="btn btn-secondary">Back to List</a>
+{% endblock %}

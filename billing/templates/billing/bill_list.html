@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Bills</h2>
+
+<form method="get" class="form-inline mb-3">
+    <div class="input-group">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search..." class="form-control">
+        <select name="search_type" class="form-select">
+            <option value="patient" {% if request.GET.search_type == "patient" %}selected{% endif %}>Patient</option>
+            <option value="encounter" {% if request.GET.search_type == "encounter" %}selected{% endif %}>Encounter</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a href="{% url 'billing:bill_list' %}" class="btn btn-secondary">Reset</a>
+    </div>
+</form>
+
+<a href="{% url 'billing:bill_add' %}" class="btn btn-primary mb-3">Add Bill</a>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Patient</th>
+            <th>Encounter</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th>Bill Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for bill in bills %}
+        <tr>
+            <td>{{ bill.bill_id }}</td>
+            <td>{{ bill.patient.first_name }} {{ bill.patient.last_name }}</td>
+            <td>{{ bill.encounter.encounter_id }}</td>
+            <td>{{ bill.total_amount }}</td>
+            <td>{{ bill.status }}</td>
+            <td>{{ bill.bill_date }}</td>
+            <td>
+                <a href="{% url 'billing:bill_detail' bill.pk %}" class="btn btn-info btn-sm">View</a>
+                <a href="{% url 'billing:bill_edit' bill.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'billing:bill_delete' bill.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No bills found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<!-- 分页 -->
+<nav aria-label="Page navigation">
+  <ul class="pagination">
+    {% if bills.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?q={{ request.GET.q }}&search_type={{ request.GET.search_type }}&page={{ bills.previous_page_number }}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+    {% endif %}
+
+    {% for num in bills.paginator.page_range %}
+      {% if bills.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+      {% elif num > bills.number|add:-5 and num < bills.number|add:5 %}
+        <li class="page-item"><a class="page-link" href="?q={{ request.GET.q }}&search_type={{ request.GET.search_type }}&page={{ num }}">{{ num }}</a></li>
+      {% endif %}
+    {% endfor %}
+
+    {% if bills.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?q={{ request.GET.q }}&search_type={{ request.GET.search_type }}&page={{ bills.next_page_number }}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+    {% endif %}
+  </ul>
+</nav>
+
+{% endblock %}

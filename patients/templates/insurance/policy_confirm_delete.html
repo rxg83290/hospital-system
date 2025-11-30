@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Delete Insurance Policy{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-danger text-white">
+        <h4>Delete Insurance Policy</h4>
+    </div>
+    <div class="card-body">
+        <p>Are you sure you want to delete the policy <strong>{{ policy.policy_number }}</strong> for <strong>{{ policy.patient.first_name }} {{ policy.patient.last_name }}</strong>?</p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+            <a href="{{ next }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

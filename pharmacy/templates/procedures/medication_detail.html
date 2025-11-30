@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Medication Detail</h2>
+    <table class="table table-bordered">
+        <tr><th>ID</th><td>{{ medication.medication_id }}</td></tr>
+        <tr><th>Generic Name</th><td>{{ medication.generic_name }}</td></tr>
+        <tr><th>Brand Name</th><td>{{ medication.brand_name }}</td></tr>
+        <tr><th>Form</th><td>{{ medication.form }}</td></tr>
+        <tr><th>Strength</th><td>{{ medication.strength }}</td></tr>
+        <tr><th>Unit Price</th><td>{{ medication.unit_price }}</td></tr>
+        <tr><th>Created At</th><td>{{ medication.created_at }}</td></tr>
+    </table>
+    <a href="{% url 'pharmacy:medication_list' %}" class="btn btn-secondary">Back</a>
+    <a href="{% url 'pharmacy:medication_edit' medication.pk %}" class="btn btn-warning">Edit</a>
+    <a href="{% url 'pharmacy:medication_delete' medication.pk %}" class="btn btn-danger">Delete</a>
+</div>
+{% endblock %}

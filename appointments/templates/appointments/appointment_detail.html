@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="my-3">Appointment Details</h2>
+
+<div class="card">
+    <div class="card-body">
+
+        <p><strong>Patient:</strong> {{ appointment.patient }}</p>
+        <p><strong>Doctor:</strong> {{ appointment.doctor }}</p>
+        <p><strong>Date:</strong> {{ appointment.appointment_date }}</p>
+        <p><strong>Start Time:</strong> {{ appointment.start_time }}</p>
+        <p><strong>End Time:</strong> {{ appointment.end_time }}</p>
+        <p><strong>Reason:</strong> {{ appointment.reason }}</p>
+        <p><strong>Status:</strong> {{ appointment.get_status_display }}</p>
+
+        <div class="mt-4">
+
+            <!-- EDIT BUTTON -->
+            <a href="{% url 'appointments:appointment_edit' appointment.pk %}"
+               class="btn btn-warning">
+                Edit Appointment
+            </a>
+
+            <!-- DELETE BUTTON -->
+            <a href="{% url 'appointments:appointment_delete' appointment.pk %}"
+               class="btn btn-danger">
+                Delete Appointment
+            </a>
+
+            <!-- ✔️ NEW CONFIRM BUTTON -->
+            <a href="{% url 'patients:dashboard' %}"
+               class="btn btn-success">
+                Done — Return to My Portal
+            </a>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

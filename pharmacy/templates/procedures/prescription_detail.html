@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+
+    <h2>Prescription Details</h2>
+
+    <table class="table table-bordered">
+        <tr>
+            <th>ID</th>
+            <td>{{ prescription.prescription_id }}</td>
+        </tr>
+        <tr>
+            <th>Encounter</th>
+            <td>{{ prescription.encounter.encounter_id }}</td>
+        </tr>
+        <tr>
+            <th>Medication</th>
+            <td>{{ prescription.medication.generic_name }}</td>
+        </tr>
+        <tr>
+            <th>Dosage</th>
+            <td>{{ prescription.dosage }}</td>
+        </tr>
+        <tr>
+            <th>Frequency Per Day</th>
+            <td>{{ prescription.frequency_per_day }}</td>
+        </tr>
+        <tr>
+            <th>Duration Days</th>
+            <td>{{ prescription.duration_days }}</td>
+        </tr>
+        <tr>
+            <th>Instructions</th>
+            <td>{{ prescription.instructions }}</td>
+        </tr>
+        <tr>
+            <th>Created At</th>
+            <td>{{ prescription.created_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+    </table>
+
+    <a href="{% url 'pharmacy:prescription_edit' prescription.pk %}" class="btn btn-warning">Edit</a>
+    <a href="{% url 'pharmacy:prescription_delete' prescription.pk %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'pharmacy:prescription_list' %}" class="btn btn-secondary">Back</a>
+
+</div>
+{% endblock %}
+

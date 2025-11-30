@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Diagnosis Detail{% endblock %}
+
+{% block content %}
+<h2>Diagnosis Detail</h2>
+
+<div class="card p-4 mb-4">
+    <p><strong>Code:</strong> {{ diagnosis.code }}</p>
+    <p><strong>Name:</strong> {{ diagnosis.name }}</p>
+    <p><strong>Description:</strong> {{ diagnosis.description }}</p>
+</div>
+
+<a href="{% url 'encounters:diagnosis_edit' diagnosis.diagnosis_id %}" class="btn btn-primary">Edit</a>
+<a href="{% url 'encounters:diagnosis_list' %}" class="btn btn-secondary">Back</a>
+
+{% endblock %}

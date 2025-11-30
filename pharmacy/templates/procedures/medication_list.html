@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Medications</h2>
+    <a href="{% url 'pharmacy:medication_add' %}" class="btn btn-primary mb-3">Add Medication</a>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Generic Name</th>
+                <th>Brand Name</th>
+                <th>Form</th>
+                <th>Strength</th>
+                <th>Unit Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for medication in medications %}
+            <tr>
+                <td>{{ medication.medication_id }}</td>
+                <td>{{ medication.generic_name }}</td>
+                <td>{{ medication.brand_name }}</td>
+                <td>{{ medication.form }}</td>
+                <td>{{ medication.strength }}</td>
+                <td>{{ medication.unit_price }}</td>
+                <td>
+                    <a href="{% url 'pharmacy:medication_edit' medication.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    <form method="post" action="{% url 'pharmacy:medication_delete' medication.pk %}" style="display:inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Encounter Diagnosis Form{% endblock %}
+
+{% block content %}
+<h2>{{ form_title }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="{% url 'encounterdiagnosis_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+
+{% endblock %}

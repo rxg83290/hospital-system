@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Patient Detail{% endblock %}
+{% block content %}
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-primary text-white">
+        <h4>{{ patient.first_name }} {{ patient.last_name }}</h4>
+    </div>
+    <div class="card-body">
+        <p><strong>MRN:</strong> {{ patient.mrn }}</p>
+        <p><strong>Date of Birth:</strong> {{ patient.dob }}</p>
+        <p><strong>Sex:</strong> {{ patient.get_sex_display }}</p>
+        <p><strong>Phone:</strong> {{ patient.phone }}</p>
+        <p><strong>Email:</strong> {{ patient.email }}</p>
+        <p><strong>Address:</strong> {{ patient.address }}</p>
+        <div class="mt-3">
+            <a href="{% url 'patients:patient_edit' patient.patient_id %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'patients:patient_delete' patient.patient_id %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'patients:patient_list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

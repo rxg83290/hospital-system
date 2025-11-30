@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Add/Edit Bill Line{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            {{ form.bill.label_tag }}
+            {{ form.bill }}
+        </div>
+        <div class="mb-3">
+            {{ form.line_type.label_tag }}
+            {{ form.line_type }}
+        </div>
+        <div class="mb-3">
+            {{ form.procedure.label_tag }}
+            {{ form.procedure }}
+        </div>
+        <div class="mb-3">
+            {{ form.medication.label_tag }}
+            {{ form.medication }}
+        </div>
+        <div class="mb-3">
+            {{ form.description1.label_tag }}
+            {{ form.description1 }}
+        </div>
+        <div class="mb-3">
+            {{ form.quantity.label_tag }}
+            {{ form.quantity }}
+        </div>
+        <div class="mb-3">
+            {{ form.unit_price.label_tag }}
+            {{ form.unit_price }}
+        </div>
+
+        <!-- line_total 是 GENERATED 列，只显示 -->
+        <div class="mb-3">
+            <label class="form-label">Line Total (calculated)</label>
+            {% if object %}
+                <input type="text" class="form-control" value="{{ object.line_total }}" readonly>
+            {% else %}
+                <input type="text" class="form-control" value="Will be calculated" readonly>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{% url 'billing:billline_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+

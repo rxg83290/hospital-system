@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Policy Detail{% endblock %}
+{% block content %}
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-primary text-white">
+        <h4>{{ policy.policy_number }} - {{ policy.payer_name }}</h4>
+    </div>
+    <div class="card-body">
+        <p><strong>Patient:</strong> {{ policy.patient.first_name }} {{ policy.patient.last_name }}</p>
+        <p><strong>Plan Name:</strong> {{ policy.plan_name }}</p>
+        <p><strong>Group Number:</strong> {{ policy.group_number }}</p>
+        <p><strong>Coverage:</strong> {{ policy.coverage_percent }}%</p>
+        <p><strong>Deductible:</strong> ${{ policy.deductible_amount }}</p>
+        <p><strong>Copay:</strong> ${{ policy.copay_amount }}</p>
+        <p><strong>Status:</strong> {{ policy.get_status_display }}</p>
+        <p><strong>Primary:</strong> {{ policy.is_primary|yesno:"Yes,No" }}</p>
+        <p><strong>Coverage Period:</strong> {{ policy.coverage_start }} to {{ policy.coverage_end }}</p>
+        <div class="mt-3">
+            <a href="{% url 'patients:policy_edit' policy.policy_id %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'patients:policy_delete' policy.policy_id %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'patients:policy_list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

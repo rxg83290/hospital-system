@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Delete Encounter{% endblock %}
+
+{% block content %}
+<h3 class="text-danger mb-4">Confirm Delete</h3>
+
+<p>Are you sure you want to delete this encounter?</p>
+
+<div class="card p-4 mb-3">
+    <p><strong>ID:</strong> {{ encounter.encounter_id }}</p>
+    <p><strong>Patient:</strong> {{ encounter.patient }}</p>
+    <p><strong>Doctor:</strong> {{ encounter.doctor }}</p>
+    <p><strong>Date:</strong> {{ encounter.date }}</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a href="{% url 'encounters:encounter_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+
+{% endblock %}

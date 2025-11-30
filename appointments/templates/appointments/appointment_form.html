@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>{{ title }}</h2>
+
+{% if form.errors %}
+<div class="alert alert-danger">
+    {{ form.errors }}
+</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <!-- Patient MRN -->
+    <div class="mb-2">
+        <label><strong>{{ form.mrn.label }}</strong></label>
+        {{ form.mrn }}
+    </div>
+
+    <!-- Doctor selection -->
+    <div class="mb-2">
+        <label><strong>{{ form.doctor.label }}</strong></label>
+        {{ form.doctor }}
+    </div>
+
+    <!-- Appointment date -->
+    <div class="mb-2">
+        <label><strong>{{ form.appointment_date.label }}</strong></label>
+        {{ form.appointment_date }}
+    </div>
+
+    <!-- Start time (fixed time slots) -->
+    <div class="mb-2">
+        <label><strong>{{ form.start_time.label }}</strong></label>
+        {{ form.start_time }}
+    </div>
+
+    <!-- End time REMOVED (auto-calculated by form) -->
+
+    <!-- Reason -->
+    <div class="mb-2">
+        <label><strong>{{ form.reason.label }}</strong></label>
+        {{ form.reason }}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+<!-- Flatpickr Date Picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+flatpickr("#appointment_date", {
+    dateFormat: "Y-m-d",
+    locale: "en",
+    altInput: true,
+    altFormat: "Y-m-d",
+    allowInput: true
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Departments{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Departments</h2>
+    <a href="{% url 'doctors:department_add' %}" class="btn btn-success">Add Department</a>
+</div>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search departments by name, location, phone, email...">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+    </div>
+</form>
+
+<style>
+.compact-table td, .compact-table th {
+    padding: 3px 6px !important;
+    font-size: 14px !important;
+    line-height: 1.1 !important;
+}
+.compact-table .btn-sm {
+    padding: 1px 4px !important;
+    font-size: 12px !important;
+}
+</style>
+
+<table class="table table-sm table-hover table-striped compact-table">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for department in departments %}
+        <tr>
+            <td>{{ department.department_id }}</td>
+            <td>{{ department.name }}</td>
+            <td>{{ department.location }}</td>
+            <td>{{ department.phone }}</td>
+            <td>{{ department.email }}</td>
+            <td>
+                <a href="{% url 'doctors:department_detail' department.department_id %}" class="btn btn-info btn-sm">View</a>
+                <a href="{% url 'doctors:department_edit' department.department_id %}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'doctors:department_delete' department.department_id %}" class="btn btn-danger btn-sm">Delete</a>
+
+                <!-- Show doctors in this department -->
+                <a href="{% url 'doctors:department_doctors' department.department_id %}" class="btn btn-secondary btn-sm">View Doctors</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">No departments found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<nav>
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Previous</span></li>
+    {% endif %}
+
+    {% for num in paginator.page_range %}
+      {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+      {% else %}
+        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Next</span></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

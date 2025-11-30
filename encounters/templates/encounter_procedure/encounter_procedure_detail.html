@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Encounter Procedure Detail{% endblock %}
+
+{% block content %}
+<h2>Encounter Procedure Details</h2>
+
+<ul class="list-group mb-3">
+    <li class="list-group-item"><strong>ID:</strong> {{ encounterprocedure.id }}</li>
+    <li class="list-group-item"><strong>Encounter:</strong> {{ encounterprocedure.encounter.id }}</li>
+    <li class="list-group-item"><strong>Procedure:</strong> {{ encounterprocedure.procedure.name }}</li>
+</ul>
+
+<a href="{% url 'encounterprocedure_edit' encounterprocedure.id %}" class="btn btn-warning">Edit</a>
+<a href="{% url 'encounterprocedure_list' %}" class="btn btn-secondary">Back</a>
+
+{% endblock %}

@@ -1,0 +1,112 @@
+{# accounts/templates/accounts/login.html #}
+{% extends "base.html" %}
+
+{% block title %}Sign In · Campus Medical Center{% endblock %}
+
+{% block content %}
+<div class="page-container max-width">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Sign in to Campus Medical Center</h1>
+            <p class="page-subtitle">
+                Enter your username and password to continue.
+            </p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="mb-md">
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Login Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Sign in</h2>
+            <p class="card-subtitle">
+                Choose whether you are signing in as a <strong>Patient</strong> or a <strong>Doctor</strong>.
+            </p>
+        </div>
+
+        <div class="card-body">
+            <form method="post" class="form-vertical" novalidate>
+                {% csrf_token %}
+
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="id_username" class="form-label">Username</label>
+                    <input
+                        type="text"
+                        id="id_username"
+                        name="username"
+                        class="input-text"
+                        placeholder="Enter your username"
+                        required
+                        value="{{ request.POST.username|default:'' }}"
+                    >
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="id_password" class="form-label">Password</label>
+                    <input
+                        type="password"
+                        id="id_password"
+                        name="password"
+                        class="input-text"
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+                <!-- Role selection -->
+                <div class="form-group">
+                    <label for="id_role" class="form-label">Sign in as</label>
+                    <select
+                        id="id_role"
+                        name="role"
+                        class="input-text"
+                        required
+                    >
+                        <option value="">Select your role…</option>
+
+                        <option value="patient"
+                            {% if request.POST.role == "patient" %}selected{% endif %}>
+                            Patient
+                        </option>
+
+                        <option value="doctor"
+                            {% if request.POST.role == "doctor" %}selected{% endif %}>
+                            Doctor
+                        </option>
+
+                        {# Removed nurse, billing, admin entirely #}
+                    </select>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        Sign in
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-footer">
+            <p class="text-muted">
+                Don’t have an account yet?
+                <a href="{% url 'accounts:signup' %}">Create one</a>.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

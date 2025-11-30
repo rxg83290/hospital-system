@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Delete BillLine{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Delete BillLine {{ billline.bill_line_id }}</h2>
+<p>Are you sure you want to delete this bill line?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url 'billing:billline_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

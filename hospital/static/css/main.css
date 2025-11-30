@@ -1,0 +1,520 @@
+/* =====================================================
+   JKUAT Clinic – Global Styles
+   ===================================================== */
+
+/* --- CSS Variables / Theme --- */
+:root {
+    --color-bg: #F3F4F6;
+    --color-surface: #FFFFFF;
+    --color-primary: #1D4ED8;
+    --color-primary-soft: #DBEAFE;
+    --color-primary-dark: #1E40AF;
+    --color-accent: #16A34A;
+
+    --color-text-main: #111827;
+    --color-text-muted: #6B7280;
+    --color-border: #E5E7EB;
+    --color-danger: #DC2626;
+    --color-warning: #F97316;
+    --color-info: #0EA5E9;
+
+    --radius-sm: 0.375rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+/* --- Reset-ish --- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text-main);
+    line-height: 1.5;
+}
+
+/* --- Links & Typography --- */
+a {
+    color: var(--color-primary-dark);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+h1, h2, h3, h4 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* --- Layout Helpers --- */
+.container {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* --- Skip link (Accessibility) --- */
+.skip-link {
+    position: absolute;
+    left: -999px;
+    top: 0;
+    background: #000;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    z-index: 1000;
+}
+
+.skip-link:focus {
+    left: 0.5rem;
+    top: 0.5rem;
+}
+
+/* =====================================================
+   Header & Navigation — Simplified (Home Only)
+   ===================================================== */
+
+.site-header {
+    background: #FFFFFF;
+    box-shadow: var(--shadow-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 64px;
+    gap: 1.5rem;
+}
+
+/* Brand */
+.brand {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+
+.brand-subtitle {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* --- Simplified Navigation (Only Home Button) --- */
+.main-nav {
+    display: flex;
+    align-items: center;
+}
+
+.nav-link {
+    font-size: 0.95rem;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    color: var(--color-text-main);
+    background-color: var(--color-primary-soft);
+    border: 1px solid var(--color-primary);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-link:hover {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+}
+
+.nav-link.active {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+}
+
+/* Small screens nav */
+@media (max-width: 640px) {
+    .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.75rem 0;
+    }
+}
+
+/* =====================================================
+   Main & Page Header
+   ===================================================== */
+
+.site-main {
+    padding: 2rem 0 3rem;
+}
+
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.6rem;
+    margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+}
+
+/* =====================================================
+   Cards & Grid
+   ===================================================== */
+
+.card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    background-color: #F9FAFB;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+}
+
+.card-meta {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+
+.grid {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =====================================================
+   Buttons
+   ===================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+        box-shadow 0.15s ease, transform 0.05s ease;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+/* Primary */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark);
+}
+
+/* Outline */
+.btn-outline {
+    background-color: #FFFFFF;
+    color: var(--color-primary-dark);
+    border-color: var(--color-primary);
+}
+
+.btn-outline:hover {
+    background-color: var(--color-primary-soft);
+}
+
+/* Ghost */
+.btn-ghost {
+    background-color: transparent;
+    color: var(--color-text-muted);
+    border-color: transparent;
+}
+
+.btn-ghost:hover {
+    background-color: #E5E7EB;
+}
+
+/* =====================================================
+   Forms
+   ===================================================== */
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.form-field label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 0.7rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background-color: #FFFFFF;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+.form-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Search input */
+.search-input {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 999px;
+}
+
+/* =====================================================
+   Tables
+   ===================================================== */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+}
+
+.table th {
+    background-color: #F9FAFB;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #4B5563;
+}
+
+.table tr:nth-child(even) td {
+    background-color: #F9FAFB;
+}
+
+/* =====================================================
+   Flash messages / Alerts
+   ===================================================== */
+
+.flash-messages {
+    margin-bottom: 1rem;
+}
+
+.alert {
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.9rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid transparent;
+}
+
+.alert-info {
+    background-color: #EFF6FF;
+    color: #1D4ED8;
+    border-color: #BFDBFE;
+}
+
+.alert-success {
+    background-color: #ECFDF5;
+    color: #166534;
+    border-color: #BBF7D0;
+}
+
+.alert-warning {
+    background-color: #FFFBEB;
+    color: #92400E;
+    border-color: #FDE68A;
+}
+
+.alert-error {
+    background-color: #FEF2F2;
+    color: #B91C1C;
+    border-color: #FECACA;
+}
+
+/* =====================================================
+   Links & inline elements
+   ===================================================== */
+
+.link-inline {
+    font-size: 0.9rem;
+    color: var(--color-primary-dark);
+}
+
+.link-inline:hover {
+    text-decoration: underline;
+}
+
+/* =====================================================
+   Role Selection Page (accounts / landing)
+   ===================================================== */
+
+.role-container {
+    max-width: 720px;
+    margin: 2.5rem auto 3rem;
+    text-align: center;
+}
+
+.role-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    margin-bottom: 0.25rem;
+}
+
+.role-subtitle {
+    color: var(--color-text-muted);
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+}
+
+.role-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+}
+
+.role-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    padding: 1.75rem 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.role-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+    border-color: var(--color-primary);
+}
+
+.role-icon {
+    font-size: 2.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.role-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--color-primary-dark);
+}
+
+.role-desc {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+/* =====================================================
+   Footer
+   ===================================================== */
+
+.site-footer {
+    border-top: 1px solid var(--color-border);
+    background-color: #FFFFFF;
+    padding: 0.75rem 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* =====================================================
+   Utility classes
+   ===================================================== */
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.mt-sm { margin-top: 0.5rem; }
+.mt-md { margin-top: 1rem; }
+.mt-lg { margin-top: 1.5rem; }
+
+.center {
+    text-align: center;
+}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Prescription List</h2>
+
+<!-- 搜索栏 -->
+    <form method="GET" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Search prescriptions..."
+                   value="{{ request.GET.q }}">
+            <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+    </form>
+
+
+    <a href="{% url 'pharmacy:prescription_add' %}" class="btn btn-primary mb-3">
+        Add Prescription
+    </a>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Encounter</th>
+                <th>Medication</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Duration</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in prescriptions %}
+            <tr>
+                <td>{{ p.prescription_id }}</td>
+                <td>{{ p.encounter.encounter_id }}</td>
+                <td>{{ p.medication.generic_name }}</td>
+                <td>{{ p.dosage }}</td>
+                <td>{{ p.frequency_per_day }}</td>
+                <td>{{ p.duration_days }}</td>
+                <td>{{ p.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <a href="{% url 'pharmacy:prescription_detail' p.pk %}" class="btn btn-info btn-sm">View</a>
+                    <a href="{% url 'pharmacy:prescription_edit' p.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="{% url 'pharmacy:prescription_delete' p.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">No prescriptions found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+<!-- 分页 -->
+<nav>
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                Previous
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                   {{ num }}
+                </a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                Next
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+</div>
+{% endblock %}

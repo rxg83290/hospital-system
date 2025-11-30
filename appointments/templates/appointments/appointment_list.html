@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .compact-table td, .compact-table th {
+        padding: 3px 6px !important;
+        font-size: 14px !important;
+        line-height: 1.1 !important; 
+    }
+
+    .compact-table .btn-sm {
+        padding: 1px 4px !important;
+        font-size: 12px !important;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center my-3">
+    <h2>Appointments</h2>
+    <a class="btn btn-primary" href="{% url 'appointments:appointment_add' %}">Add Appointment</a>
+</div>
+
+<!-- research -->
+<form method="get" class="d-flex mb-2" style="max-width: 300px;">
+    <input type="text" name="q" value="{{ request.GET.q }}" 
+           class="form-control form-control-sm me-2"
+           placeholder="Search appointments...">
+    <button type="submit" class="btn btn-sm btn-primary">Search</button>
+</form>
+
+<table class="table table-sm table-striped table-bordered compact-table">
+    <thead class="table-dark">
+        <tr>
+            <th>Patient</th>
+            <th>Doctor</th>
+            <th>Date</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Status</th>
+            <th style="width: 150px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appointment in page_obj %}
+        <tr>
+            <td>
+                <strong>{{ appointment.patient.mrn }} </strong><br>
+                {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
+            </td>
+            <td>
+                <strong>{{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}</strong><br>
+                {{ appointment.doctor.specialization }}
+            </td>
+            <td>{{ appointment.appointment_date|date:"Y-m-d" }}</td>
+            <td>{{ appointment.start_time|time:"H:i" }}</td>
+	    <td>{{ appointment.end_time|time:"H:i" }}</td>
+            <td>{{ appointment.status }}</td>
+            <td>
+                <a href="{% url 'appointments:appointment_detail' appointment.pk %}" class="btn btn-sm btn-info">View</a>
+                <a href="{% url 'appointments:appointment_edit' appointment.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                <a href="{% url 'appointments:appointment_delete' appointment.pk %}" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center">No appointments found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- page -->
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                <li class="page-item"><a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+
+{% endblock %}
+

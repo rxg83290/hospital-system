@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Procedure Detail</h2>
+<table class="table table-bordered">
+    <tr><th>Code</th><td>{{ procedure.code }}</td></tr>
+    <tr><th>Name</th><td>{{ procedure.name }}</td></tr>
+    <tr><th>Description</th><td>{{ procedure.description }}</td></tr>
+    <tr><th>Department</th><td>{{ procedure.department }}</td></tr>
+    <tr><th>Duration (min)</th><td>{{ procedure.duration_minutes }}</td></tr>
+    <tr><th>Base Price</th><td>{{ procedure.base_price }}</td></tr>
+</table>
+<a href="{% url 'pharmacy:procedure_edit' procedure.pk %}" class="btn btn-warning">Edit</a>
+<a href="{% url 'pharmacy:procedure_delete' procedure.pk %}" class="btn btn-danger">Delete</a>
+<a href="{% url 'pharmacy:procedure_list' %}" class="btn btn-secondary">Back to List</a>
+{% endblock %}

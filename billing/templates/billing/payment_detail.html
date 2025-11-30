@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Payment Detail{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Payment {{ payment.payment_id }}</h2>
+
+<table class="table table-bordered">
+    <tr><th>Bill</th><td>{{ payment.bill.bill_id }}</td></tr>
+    <tr><th>Amount</th><td>{{ payment.amount }}</td></tr>
+    <tr><th>Method</th><td>{{ payment.method }}</td></tr>
+    <tr><th>Status</th><td>{{ payment.status }}</td></tr>
+    <tr><th>Reference</th><td>{{ payment.reference }}</td></tr>
+    <tr><th>Paid At</th><td>{{ payment.paid_at|date:"Y-m-d H:i" }}</td></tr>
+    <tr><th>Created At</th><td>{{ payment.created_at|date:"Y-m-d H:i" }}</td></tr>
+</table>
+
+<a href="{% url 'billing:payment_edit' payment.payment_id %}" class="btn btn-warning">Edit</a>
+<a href="{% url 'billing:payment_delete' payment.payment_id %}" class="btn btn-danger">Delete</a>
+<a href="{% url 'billing:payment_list' %}" class="btn btn-secondary">Back to List</a>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Encounter Detail{% endblock %}
+
+{% block content %}
+<h2>Encounter Details</h2>
+
+<div class="card p-4 mb-4">
+    <p><strong>ID:</strong> {{ encounter.encounter_id }}</p>
+    <p><strong>Patient:</strong> {{ encounter.patient.first_name }} {{ encounter.patient.last_name }}</p>
+    <p><strong>Doctor:</strong> {{ encounter.doctor.first_name }} {{ encounter.doctor.last_name }}</p>
+    <p><strong>Date:</strong> {{ encounter.date }}</p>
+    <p><strong>Notes:</strong> {{ encounter.notes|default:"-" }}</p>
+</div>
+
+<a href="{% url 'encounters:encounter_edit' encounter.encounter_id %}" class="btn btn-primary">Edit</a>
+<a href="{% url 'encounters:encounter_delete' encounter.encounter_id %}" class="btn btn-danger">Delete</a>
+<a href="{% url 'encounters:encounter_list' %}" class="btn btn-secondary">Back</a>
+
+{% endblock %}
