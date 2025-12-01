@@ -373,7 +373,50 @@
                             <p class="text-muted">No medications prescribed in this encounter yet.</p>
                         {% endif %}
 
+
+
+<h3 class="card-title-sm mt-lg">Procedures for Encounter</h3>
+
+{% if active_encounter %}
+    {% with active_encounter.procedures.all as procedures %}
+        {% if procedures %}
+            <ul class="list-vertical mb-md">
+                {% for ep in procedures %}
+                    <li class="list-item">
+                        <div class="list-item-main">
+                            <div class="list-item-title">
+                                {{ ep.procedure.name }}
+                            </div>
+                            <div class="list-item-sub">
+                                Quantity: {{ ep.quantity }}
+                                <br>Unit Price: {{ ep.procedure.base_price }}
+                            </div>
+                        </div>
+
+                        <div class="list-item-actions">
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_procedure">
+                                <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                                <input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
+                                <input type="hidden" name="procedure_id" value="{{ ep.id }}">
+                                <button type="submit" class="btn btn-xs btn-danger">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No procedures added for this encounter yet.</p>
+        {% endif %}
+    {% endwith %}
+{% endif %}
+
+
                         <hr class="divider">
+
 
 
 <h4 class="card-title-xs mb-sm">Add Medications (Multiple)</h4>
@@ -438,6 +481,8 @@
         </button>
     </div>
 </form>
+
+
 <h4 class="card-title-xs mb-sm">Add Procedures (Multiple)</h4>
 
 <form method="post" class="stacked-form">

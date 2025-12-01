@@ -247,6 +247,20 @@ def doctor_dashboard(request):
 
             sync_billing_for_encounter(active_encounter_obj)
 
+
+        # ======= 删除 Procedure =======
+        elif action == "delete_procedure":
+            proc_id = request.POST.get("procedure_id")
+            EncounterProcedure.objects.filter(
+                id=proc_id,
+                encounter=active_encounter_obj
+            ).delete()
+
+            sync_billing_for_encounter(active_encounter_obj)
+
+
+
+
         # ======= 手动“同步账单”按钮 =======
         elif action == "sync_billing":
             sync_billing_for_encounter(active_encounter_obj)
