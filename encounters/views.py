@@ -8,6 +8,8 @@ from django.urls import reverse
 from django.contrib import messages
 from .models import Encounter, Diagnosis, EncounterDiagnosis, EncounterProcedure
 from .forms import EncounterForm, DiagnosisForm, EncounterDiagnosisForm, EncounterProcedureForm 
+from django.utils.timezone import now
+from appointments.models import Appointments
 
 # ==========================
 # Encounter Views
@@ -363,3 +365,46 @@ class EncounterProcedureDeleteView(LoginRequiredMixin, View):
         encounter_id = encounter_procedure.encounter.encounter_id
         encounter_procedure.delete()
         return redirect('encounters:encounter_procedure_list', encounter_id=encounter_id)
+
+
+
+def create_encounter_from_appointment(request, appointment_id):
+    """
+    Create an Encounter directly from an Appointment,
+    then redirect doctor into doctor_dashboard with the encounter opened.
+    """
+
+    # 1. Find the appointment
+    appt = get_object_or_404(Appointments, pk=appointment_id)
+
+    # 2. Avoid duplicate encounters for SAME patient + SAME date + SAME doctor
+    existing = Encounter.objects.filter(
+        patient=appt.patient,
+        doctor=appt.doctor,
+        encounter_date=appt.appointment_date,
+    ).first()
+
+    if existing:
+        # If exists → redirect to doctor dashboard with this encounter opened
+        return redirect(
+            f"/doctors/dashboard/?q={appt.patient.mrn}"
+            f"&patient_id={appt.patient.pk}"
+            f"&encounter_id={existing.encounter_id}"
+        )
+
+    # 3. Create a NEW encounter
+    encounter = Encounter.objects.create(
+        appointment=appt,
+        patient=appt.patient,
+        doctor=appt.doctor,
+        encounter_date=appt.appointment_date,
+        visit_type="Consultation",
+        notes=None,
+    )
+
+    # 4. Redirect doctor into dashboard with this encounter opened
+    return redirect(
+        f"/doctors/dashboard/?q={appt.patient.mrn}"
+        f"&patient_id={appt.patient.pk}"
+        f"&encounter_id={encounter.encounter_id}"
+    )

@@ -15,8 +15,9 @@ from .models import Patients, InsurancePolicy
 from .forms import PatientForm, InsurancePolicyForm
 from appointments.models import Appointments
 from encounters.models import Encounter
-from billing.models import Bill
+
 from pharmacy.models import Prescription
+from billing.models import Bill, BillLine
 
 
 # ==========================
@@ -234,10 +235,17 @@ def patient_dashboard(request):
         )
 
         # Recent bills
+        
+
         recent_bills = (
             Bill.objects.filter(patient=patient)
+            .prefetch_related(
+                "bill_lines__medication",
+                "bill_lines__procedure"
+            )
             .order_by("-bill_date", "-bill_id")[:5]
         )
+
 
         # Recent medications
         recent_medications = (

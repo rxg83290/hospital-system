@@ -113,10 +113,14 @@
                             {% for appt in upcoming_appointments %}
                                 <li class="list-item">
                                     <div class="list-item-main">
-                                        <div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
-                                            {{ appt.appointment_date|date:"M d, Y" }}
-                                            · {{ appt.start_time|time:"h:i A" }}
-                                        </div>
+					<div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
+    					<a href="{% url 'appointments:appointment_detail' appt.appointment_id %}" 
+       					style="text-decoration: none; color: inherit;">
+        					{{ appt.appointment_date|date:"M d, Y" }}
+        					· {{ appt.start_time|time:"h:i A" }}
+    					</a>
+					</div>
+
                                         <div class="list-item-sub">
                                             <div class="list-row">
                                                 <span class="list-label">Provider</span>
@@ -208,118 +212,92 @@
                 </div>
             </section>
 
-            <!-- Recent Billing -->
-            <section class="card">
-                <div class="card-header">
-                    <h3 class="card-title-sm" style="font-size: 1.4rem;">Recent Billing</h3>
-                    <p class="card-subtitle-sm" style="font-size: 1.05rem;">
-                        Track your latest bills and payment status.
-                    </p>
-                </div>
-                <div class="card-body" style="font-size: 1.05rem;">
-                    {% if recent_bills %}
-                        <ul class="list-vertical list-compact">
-                            {% for bill in recent_bills %}
-                                <li class="list-item">
-                                    <div class="list-item-main">
-                                        <div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
-                                            Bill #{{ bill.bill_id }}
-                                            · {{ bill.bill_date|date:"M d, Y" }}
-                                        </div>
-                                        <div class="list-item-sub">
-                                            <div class="list-row">
-                                                <span class="list-label">Amount</span>
-                                                <span class="list-value">
-                                                    {{ bill.total_amount }}
-                                                </span>
-                                            </div>
-                                            <div class="list-row">
-                                                <span class="list-label">Status</span>
-                                                <span class="badge">
-                                                    {{ bill.get_status_display }}
-                                                </span>
-                                            </div>
-                                            {% if bill.payment_due %}
-                                                <div class="list-row">
-                                                    <span class="list-label">Due</span>
-                                                    <span class="list-value">
-                                                        {{ bill.payment_due|date:"M d, Y" }}
-                                                    </span>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">No recent billing activity.</p>
-                    {% endif %}
-                </div>
-            </section>
+<!-- Recent Billing -->
+<section class="card">
+    <div class="card-header">
+        <h3 class="card-title-sm" style="font-size: 1.4rem;">Recent Billing</h3>
+        <p class="card-subtitle-sm" style="font-size: 1.05rem;">
+            Track your latest bills and payment status.
+        </p>
+    </div>
 
-            <!-- Medications -->
-            <section class="card">
-                <div class="card-header">
-                    <h3 class="card-title-sm" style="font-size: 1.4rem;">Medications</h3>
-                    <p class="card-subtitle-sm" style="font-size: 1.05rem;">
-                        Review your most recently prescribed medications.
-                    </p>
-                </div>
-                <div class="card-body" style="font-size: 1.05rem;">
-                    {% if recent_medications %}
-                        <ul class="list-vertical list-compact">
-                            {% for presc in recent_medications %}
-                                <li class="list-item">
-                                    <div class="list-item-main">
-                                        <div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
-                                            {{ presc.medication.generic_name }}
-                                            {% if presc.medication.brand_name %}
-                                                ({{ presc.medication.brand_name }})
-                                            {% endif %}
-                                            · {{ presc.medication.form }}
-                                            {% if presc.medication.strength %}
-                                                · {{ presc.medication.strength }}
-                                            {% endif %}
-                                        </div>
-                                        <div class="list-item-sub">
-                                            <div class="list-row">
-                                                <span class="list-label">Dosage</span>
-                                                <span class="list-value">
-                                                    {{ presc.dosage }}
-                                                </span>
-                                            </div>
-                                            <div class="list-row">
-                                                <span class="list-label">Frequency</span>
-                                                <span class="list-value">
-                                                    {{ presc.frequency_per_day }}×/day
-                                                    for {{ presc.duration_days }} days
-                                                </span>
-                                            </div>
-                                            {% if presc.instructions %}
-                                                <div class="list-row">
-                                                    <span class="list-label">Instructions</span>
-                                                    <span class="list-value">
-                                                        {{ presc.instructions }}
-                                                    </span>
-                                                </div>
-                                            {% endif %}
-                                            <div class="list-row">
-                                                <span class="list-label">Prescribed</span>
-                                                <span class="list-value">
-                                                    {{ presc.created_at|date:"M d, Y" }}
-                                                </span>
-                                            </div>
-                                        </div>
+    <div class="card-body" style="font-size: 1.05rem;">
+        {% if recent_bills %}
+            <ul class="list-vertical list-compact">
+                
+                {% for bill in recent_bills %}
+                    <li class="list-item">
+                        <div class="list-item-main">
+
+                            <!-- Bill Header -->
+                            <div class="list-item-title" style="font-size: 1.1rem; font-weight: 600;">
+                                Bill #{{ bill.bill_id }} · {{ bill.bill_date|date:"M d, Y" }}
+                            </div>
+
+                            <!-- Summary -->
+                            <div class="list-item-sub">
+                                <div class="list-row">
+                                    <span class="list-label">Amount</span>
+                                    <span class="list-value">{{ bill.total_amount }}</span>
+                                </div>
+                                <div class="list-row">
+                                    <span class="list-label">Status</span>
+                                    <span class="badge">{{ bill.get_status_display }}</span>
+                                </div>
+                                {% if bill.payment_due %}
+                                <div class="list-row">
+                                    <span class="list-label">Due</span>
+                                    <span class="list-value">{{ bill.payment_due|date:"M d, Y" }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- BILL ITEMS (关键部分，只要数据库有就会显示) -->
+                            {% with lines=bill.bill_lines.all %}
+                                {% if lines %}
+                                    <div class="mt-sm">
+                                        <strong>Details:</strong>
+                                        <ul class="list-vertical ml-md">
+
+                                            {% for line in lines %}
+                                                <li>
+                                                    {% if line.line_type == "MEDICATION" and line.medication %}
+                                                        🟦 <strong>{{ line.medication.generic_name }}</strong>
+                                                        {% if line.medication.brand_name %}
+                                                            ({{ line.medication.brand_name }})
+                                                        {% endif %}
+                                                    {% elif line.line_type == "PROCEDURE" and line.procedure %}
+                                                        🟧 <strong>{{ line.procedure.name }}</strong>
+                                                    {% else %}
+                                                        🔹 <strong>{{ line.description1|default:"Service" }}</strong>
+                                                    {% endif %}
+
+                                                    <div class="text-muted">
+                                                        {{ line.quantity }} × {{ line.unit_price }}
+                                                        = <strong>{{ line.calculated_total }}</strong>
+                                                    </div>
+                                                </li>
+                                            {% endfor %}
+
+                                        </ul>
                                     </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">No medications listed.</p>
-                    {% endif %}
-                </div>
-            </section>
+                                {% endif %}
+                            {% endwith %}
+
+                        </div>
+                    </li>
+                {% endfor %}
+
+            </ul>
+        {% else %}
+            <p class="text-muted">No recent billing activity.</p>
+        {% endif %}
+    </div>
+</section>
+
+
+
+
 
         </div>
     {% else %}

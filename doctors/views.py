@@ -7,12 +7,13 @@ from django.db.models import Q, Value
 from django.db.models.functions import Concat
 from django.urls import reverse
 from urllib.parse import urlencode
+from pharmacy.models import Procedure1
 
 from .models import Department, Doctors
 from .forms import DepartmentForm, DoctorForm
 
 from patients.models import Patients
-from encounters.models import Encounter
+from encounters.models import Encounter, EncounterProcedure
 from pharmacy.models import Medication, Prescription
 from billing.models import Bill, BillLine
 
@@ -20,6 +21,8 @@ from django.utils import timezone
 
 from appointments.models import Appointments
 from .models import Department, Doctors
+from datetime import date
+from django.utils import timezone
 
 
 
@@ -27,39 +30,112 @@ from .models import Department, Doctors
 # Doctor Clinical Dashboard
 # (target for role dropdown: "Doctor")
 # ==========================
+
+
+
 def doctor_dashboard(request):
     """
-    Doctor-facing dashboard:
-      - Search for a patient (name/MRN/phone/email)
-      - View all encounters for that patient
-      - Edit encounter diagnosis / treatment / notes
-      - Add medications (prescriptions) for the active encounter
-      - Sync/update billing for that encounter
+    Doctor dashboard:
+      - Show today's & future appointments
+      - Search patient by MRN/name/phone/email
+      - Batch add medications & procedures
+      - Auto billing for medications + procedures
     """
 
-    query = (request.GET.get("q") or "").strip()
+    # ---------------------------------------------------------
+    # 自动计费函数（药物 + 手术）
+    # ---------------------------------------------------------
+    def sync_billing_for_encounter(encounter):
+        bill, _ = Bill.objects.get_or_create(
+            encounter=encounter,
+            patient=encounter.patient,
+            defaults={"status": "PENDING"},
+        )
 
-    # IDs from GET or POST
+        # 删除旧账单行（避免累积）
+        bill.bill_lines.all().delete()
+
+        # ======== 药物明细 ========
+        prescriptions = Prescription.objects.filter(encounter=encounter).select_related("medication")
+        for p in prescriptions:
+            med = p.medication
+            qty = max((p.frequency_per_day or 1) * (p.duration_days or 1), 1)
+
+            BillLine.objects.create(
+                bill=bill,
+                medication=med,
+                line_type="MEDICATION",
+                quantity=qty,
+                unit_price=med.unit_price or 0,
+                description1=med.generic_name,
+            )
+
+        # ======== 手术 Procedure1 明细 ========
+        procedures = EncounterProcedure.objects.filter(encounter=encounter).select_related("procedure")
+        for ep in procedures:
+            proc = ep.procedure
+
+            BillLine.objects.create(
+                bill=bill,
+                procedure=proc,
+                line_type="PROCEDURE",
+                quantity=ep.quantity or 1,
+                unit_price=proc.base_price or 0,   # ⚠️ 使用 Procedure1.base_price
+                description1=proc.name,
+            )
+
+        # ======== 更新总费用 ========
+        bill.total_amount = sum(line.calculated_total for line in bill.bill_lines.all())
+        bill.save()
+
+        return bill
+
+    # ---------------------------------------------------------
+    # 获取 query & POST 参数
+    # ---------------------------------------------------------
+    query = (request.GET.get("q") or "").strip()
     patient_id = request.GET.get("patient_id") or request.POST.get("patient_id")
     encounter_id = request.GET.get("encounter_id") or request.POST.get("encounter_id")
     action = request.POST.get("action")
 
-    # -----------------------------------
-    # Default values to avoid UnboundLocalError
-    # -----------------------------------
+    # ---------------------------------------------------------
+    # 默认上下文变量
+    # ---------------------------------------------------------
     patient = None
+    doctor = None
     search_error = None
 
-    dob = None
+    today = date.today()
+    todays_appointments = []
+
     encounters = []
     active_encounter = None
     encounter_prescriptions = []
     encounter_bill = None
-    medication_options = Medication.objects.none()
 
-    # --------------------------
-    # Resolve patient
-    # --------------------------
+    medication_options = Medication.objects.none()
+    procedure_options = Procedure1.objects.none()
+
+    # ---------------------------------------------------------
+    # 1. 获取当前登录医生 doctor_profile
+    # ---------------------------------------------------------
+    if request.user.is_authenticated and hasattr(request.user, "doctor_profile"):
+        doctor = request.user.doctor_profile
+
+    # 加载“今天 + 未来”的预约
+    if doctor:
+        todays_appointments = (
+            Appointments.objects.filter(
+                doctor=doctor,
+                appointment_date__gte=today
+            )
+            .select_related("patient")
+            .order_by("appointment_date", "start_time")
+        )
+
+    # ---------------------------------------------------------
+    # 2. 搜索 patient
+    # ---------------------------------------------------------
     if patient_id:
         patient = get_object_or_404(Patients, pk=patient_id)
 
@@ -73,163 +149,161 @@ def doctor_dashboard(request):
             | Q(mrn__icontains=query)
             | Q(phone__icontains=query)
             | Q(email__icontains=query)
-        ).order_by("last_name", "first_name")
+        )
 
-        count = patients_qs.count()
-        if count == 0:
+        if patients_qs.count() == 0:
             search_error = "No patients found matching your search."
-        elif count == 1:
+        elif patients_qs.count() == 1:
             patient = patients_qs.first()
         else:
             search_error = "Multiple patients found. Please refine your search."
 
-    # --------------------------
-    # Handle POST actions
-    # --------------------------
-    if request.method == "POST" and patient and encounter_id and action:
+    # ---------------------------------------------------------
+    # 3. POST actions（更新 notes / 添加药物 / 手术 / 删除 / 计费）
+    # ---------------------------------------------------------
+    if request.method == "POST" and action and patient and encounter_id:
 
         active_encounter_obj = get_object_or_404(
             Encounter,
             encounter_id=encounter_id,
-            patient=patient,
+            patient=patient
         )
 
-        # 1. Update encounter
+        # ======= 修改 Encounter 笔记 =======
         if action == "update_encounter":
-            active_encounter_obj.diagnosis_summary = (
-                request.POST.get("diagnosis_summary") or ""
-            ).strip() or None
-            active_encounter_obj.treatment_plan = (
-                request.POST.get("treatment_plan") or ""
-            ).strip() or None
-            active_encounter_obj.notes = (
-                request.POST.get("notes") or ""
-            ).strip() or None
+            active_encounter_obj.diagnosis_summary = request.POST.get("diagnosis_summary") or None
+            active_encounter_obj.treatment_plan = request.POST.get("treatment_plan") or None
+            active_encounter_obj.notes = request.POST.get("notes") or None
             active_encounter_obj.save()
 
-        # 2. Add prescription
+        # ======= 添加单个药物 =======
         elif action == "add_prescription":
-            medication_id = request.POST.get("medication_id")
-            dosage = (request.POST.get("dosage") or "").strip()
-            frequency_per_day = request.POST.get("frequency_per_day") or "1"
-            duration_days = request.POST.get("duration_days") or "7"
-            instructions = (request.POST.get("instructions") or "").strip() or None
+            med_id = request.POST.get("medication_id")
+            dosage = request.POST.get("dosage")
+            freq = int(request.POST.get("frequency_per_day") or 1)
+            duration = int(request.POST.get("duration_days") or 7)
+            instructions = request.POST.get("instructions") or None
 
-            if medication_id and dosage:
-                med = get_object_or_404(Medication, pk=medication_id)
-                freq = int(frequency_per_day) if frequency_per_day.isdigit() else 1
-                duration = int(duration_days) if duration_days.isdigit() else 7
-
+            if med_id and dosage:
+                med = get_object_or_404(Medication, pk=med_id)
                 Prescription.objects.create(
                     encounter=active_encounter_obj,
                     medication=med,
                     dosage=dosage,
                     frequency_per_day=freq,
                     duration_days=duration,
-                    instructions=instructions,
+                    instructions=instructions
                 )
 
-        # 3. Sync billing
-        elif action == "sync_billing":
+            sync_billing_for_encounter(active_encounter_obj)
 
-            bill, _created = Bill.objects.get_or_create(
-                encounter=active_encounter_obj,
-                patient=patient,
-                defaults={"status": "PENDING"},
-            )
+        # ======= 批量添加药物 =======
+        elif action == "batch_add_prescriptions":
+            meds = request.POST.getlist("medication_id[]")
+            dosages = request.POST.getlist("dosage[]")
+            freqs = request.POST.getlist("frequency_per_day[]")
+            durations = request.POST.getlist("duration_days[]")
+            instructions = request.POST.getlist("instructions[]")
 
-            prescriptions = Prescription.objects.filter(
+            for i in range(len(meds)):
+                if meds[i] and dosages[i]:
+                    med = Medication.objects.filter(pk=meds[i]).first()
+                    if med:
+                        Prescription.objects.create(
+                            encounter=active_encounter_obj,
+                            medication=med,
+                            dosage=dosages[i],
+                            frequency_per_day=int(freqs[i]),
+                            duration_days=int(durations[i]),
+                            instructions=instructions[i] or None,
+                        )
+
+            sync_billing_for_encounter(active_encounter_obj)
+
+        # ======= 批量添加 Procedure1 手术 =======
+        elif action == "batch_add_procedures":
+            proc_ids = request.POST.getlist("procedure_id[]")
+            quantities = request.POST.getlist("quantity[]")
+
+            for i in range(len(proc_ids)):
+                if proc_ids[i]:
+                    proc = Procedure1.objects.filter(pk=proc_ids[i]).first()
+                    if proc:
+                        EncounterProcedure.objects.create(
+                            encounter=active_encounter_obj,
+                            procedure=proc,
+                            quantity=int(quantities[i] or 1),
+                        )
+
+            sync_billing_for_encounter(active_encounter_obj)
+
+        # ======= 删除药物 =======
+        elif action == "delete_prescription":
+            presc_id = request.POST.get("prescription_id")
+            Prescription.objects.filter(
+                prescription_id=presc_id,
                 encounter=active_encounter_obj
-            ).select_related("medication")
+            ).delete()
 
-            for p in prescriptions:
-                med = p.medication
-                if not med:
-                    continue
+            sync_billing_for_encounter(active_encounter_obj)
 
-                qty = (p.frequency_per_day or 0) * (p.duration_days or 0)
-                if qty <= 0:
-                    qty = 1
+        # ======= 手动“同步账单”按钮 =======
+        elif action == "sync_billing":
+            sync_billing_for_encounter(active_encounter_obj)
 
-                unit_price = med.unit_price or 0
-
-                BillLine.objects.update_or_create(
-                    bill=bill,
-                    medication=med,
-                    line_type="MEDICATION",
-                    defaults={
-                        "quantity": qty,
-                        "unit_price": unit_price,
-                        "description1": med.generic_name,
-                    },
-                )
-
-            total = sum(line.calculated_total for line in bill.bill_lines.all())
-            bill.total_amount = total
-            bill.save()
-
-        # Redirect after POST
-        base_url = reverse("doctors:dashboard")
-        params = {
+        # Redirect 避免重复提交
+        base = reverse("doctors:dashboard")
+        params = urlencode({
             "q": query,
             "patient_id": patient.pk,
             "encounter_id": encounter_id,
-        }
-        return redirect(f"{base_url}?{urlencode(params)}")
+        })
+        return redirect(f"{base}?{params}")
 
-    # --------------------------
-    # Read-only context
-    # --------------------------
+    # ---------------------------------------------------------
+    # 4. 加载 encounter 数据
+    # ---------------------------------------------------------
     if patient:
-        dob = patient.dob
-
         encounters = (
             Encounter.objects.filter(patient=patient)
             .select_related("doctor")
             .order_by("-encounter_date", "-created_at")
         )
 
-        active_encounter = (
-            encounters.filter(encounter_id=encounter_id).first()
-            if encounter_id
-            else encounters.first()
-        )
+        active_encounter = encounters.filter(encounter_id=encounter_id).first() if encounter_id else encounters.first()
 
         if active_encounter:
-            encounter_prescriptions = (
-                Prescription.objects.filter(encounter=active_encounter)
-                .select_related("medication")
-                .order_by("-created_at")
-            )
-            encounter_bill = (
-                Bill.objects.filter(
-                    encounter=active_encounter,
-                    patient=patient,
-                )
-                .order_by("-bill_date", "-created_at")
-                .first()
-            )
+            encounter_prescriptions = Prescription.objects.filter(encounter=active_encounter)
+            encounter_bill = Bill.objects.filter(encounter=active_encounter, patient=patient).first()
 
+        # 药物 & 手术列表
         medication_options = Medication.objects.order_by("generic_name")
+        procedure_options = Procedure1.objects.order_by("name")
 
-    # --------------------------
-    # Render
-    # --------------------------
+    # ---------------------------------------------------------
+    # 5. 渲染模板
+    # ---------------------------------------------------------
     context = {
         "query": query,
+        "doctor": doctor,
         "patient": patient,
-        "dob": dob,
         "search_error": search_error,
+
+        "today": today,
+        "todays_appointments": todays_appointments,
+
         "encounters": encounters,
         "active_encounter": active_encounter,
         "encounter_prescriptions": encounter_prescriptions,
         "encounter_bill": encounter_bill,
+
         "medication_options": medication_options,
+        "procedure_options": procedure_options,
+
         "section": "doctors",
     }
 
     return render(request, "doctors/doctor_dashboard.html", context)
-
 
 # ==========================
 # Department Views

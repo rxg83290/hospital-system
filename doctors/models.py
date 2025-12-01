@@ -23,7 +23,13 @@ class Department(models.Model):
 
 
 class Doctors(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+    settings.AUTH_USER_MODEL,
+    null=True,
+    blank=True,
+    on_delete=models.CASCADE,
+    related_name="doctor_profile"
+)
     doctor_id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=10)
     last_name = models.CharField(max_length=10)

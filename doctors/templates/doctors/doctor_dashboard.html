@@ -35,61 +35,84 @@
 
     {% if doctor %}
         <!-- Today's Schedule -->
-        <div class="card mb-lg">
-            <div class="card-header">
-                <h2 class="card-title">Today's Schedule</h2>
-                <p class="card-subtitle">
-                    {{ today|date:"M d, Y" }} &middot;
-                    {% if todays_appointments %}
-                        {{ todays_appointments|length }} appointment{{ todays_appointments|length|pluralize }}
-                    {% else %}
-                        No appointments scheduled for today.
-                    {% endif %}
-                </p>
-            </div>
+	<div class="card mb-lg">
+    		<div class="card-header">
+        		<h2 class="card-title">Today's Schedule</h2>
+        		<p class="card-subtitle">
+            		{{ today|date:"M d, Y" }} &middot;
+            		{% if todays_appointments %}
+                		{{ todays_appointments|length }} appointment{{ todays_appointments|length|pluralize }}
+           		{% else %}
+                		No appointments scheduled for today.
+            		{% endif %}
+        		</p>
+    		</div>
 
-            {% if todays_appointments %}
-                <div class="card-body">
-                    <ul class="list-vertical">
-                        {% for appt in todays_appointments %}
-                            <li class="list-item">
-                                <div class="list-item-main">
-                                    <div class="list-item-title">
-                                        {{ appt.start_time|time:"g:i A" }} – {{ appt.end_time|time:"g:i A" }}
-                                        &middot;
-                                        {{ appt.patient.first_name }} {{ appt.patient.last_name }}
-                                        {% if appt.patient.mrn %}
-                                            (MRN {{ appt.patient.mrn }})
-                                        {% endif %}
-                                    </div>
-                                    <div class="list-item-sub">
-                                        {% if appt.reason %}
-                                            Reason: {{ appt.reason }} &middot;
-                                        {% endif %}
-                                        Status:
-                                        <span class="badge">{{ appt.get_status_display }}</span>
-                                    </div>
-                                </div>
-                                <div class="list-item-actions">
-                                    <a
-                                        href="{% url 'appointments:appointment_detail' appt.pk %}"
-                                        class="btn btn-xs btn-outline"
-                                    >
-                                        View
-                                    </a>
-                                    <a
-                                        href="{% url 'doctors:dashboard' %}?q={{ appt.patient.mrn|urlencode }}"
-                                        class="btn btn-xs btn-primary"
-                                    >
-                                        Open Patient
-                                    </a>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
+    		{% if todays_appointments %}
+        		<div class="card-body">
+
+            		{% now "H:i" as current_time %}
+            		<ul class="list-vertical">
+
+                		{# 只显示 "正在进行或未来" 的预约 #}
+                		{% for appt in todays_appointments %}
+                    		{% if appt.end_time|time:"H:i" >= current_time %}
+
+                        		<li class="list-item">
+                            		<div class="list-item-main">
+                                		<div class="list-item-title">
+                                    		{{ appt.start_time|time:"g:i A" }} – {{ appt.end_time|time:"g:i A" }}
+                                    		&middot;
+                                    		{{ appt.patient.first_name }} {{ appt.patient.last_name }}
+                                    		{% if appt.patient.mrn %}
+                                       		 (MRN {{ appt.patient.mrn }})
+                                    		{% endif %}
+                                		</div>
+                                		<div class="list-item-sub">
+                                    		{% if appt.reason %}
+                                        		Reason: {{ appt.reason }} &middot;
+                                    		{% endif %}
+                                    		Status:
+                                    		<span class="badge">{{ appt.get_status_display }}</span>
+                                		</div>
+                            		</div>
+
+                            		<div class="list-item-actions">
+                                		<a
+                                    		href="{% url 'appointments:appointment_detail' appt.pk %}"
+                                    		class="btn btn-xs btn-outline"
+                                		>
+                                    		View
+                                		</a>
+
+                                		<a
+                                    		href="{% url 'doctors:dashboard' %}?q={{ appt.patient.mrn|urlencode }}"
+                                    		class="btn btn-xs btn-primary"
+                                		>
+                                    		Open Patient
+                                		</a>
+
+                                		<a
+                                    		href="{% url 'encounters:create_from_appointment' appt.pk %}"
+                                    		class="btn btn-xs btn-success"
+                                		>
+                                    		Start Visit
+                                		</a>
+                            		</div>
+                        		</li>
+
+                    		{% endif %}
+                {% endfor %}
+
+                {# 如果所有预约都结束了，给提示 #}
+                {% if todays_appointments|length == 0 %}
+                    <p class="text-muted">No remaining appointments for today.</p>
+                {% endif %}
+
+            </ul>
         </div>
+    {% endif %}
+</div>
     {% endif %}
 
     <!-- Search Card -->
@@ -298,118 +321,163 @@
                 <div class="card-body">
                     {% if active_encounter %}
                         {% if encounter_prescriptions %}
-                            <ul class="list-vertical mb-md">
-                                {% for presc in encounter_prescriptions %}
-                                    <li class="list-item">
-                                        <div class="list-item-main">
-                                            <div class="list-item-title">
-                                                {{ presc.medication.generic_name }}
-                                                {% if presc.medication.brand_name %}
-                                                    ({{ presc.medication.brand_name }})
-                                                {% endif %}
-                                                – {{ presc.medication.form }}
-                                                {% if presc.medication.strength %}
-                                                    · {{ presc.medication.strength }}
-                                                {% endif %}
-                                            </div>
-                                            <div class="list-item-sub">
-                                                Dosage: {{ presc.dosage }}<br>
-                                                {{ presc.frequency_per_day }}×/day
-                                                for {{ presc.duration_days }} days
-                                                {% if presc.instructions %}
-                                                    <br>Instructions: {{ presc.instructions }}
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </li>
-                                {% endfor %}
-                            </ul>
+                            
+
+<ul class="list-vertical mb-md">
+    {% for presc in encounter_prescriptions %}
+        <li class="list-item">
+            <div class="list-item-main">
+                <div class="list-item-title">
+                    {{ presc.medication.generic_name }}
+                    {% if presc.medication.brand_name %}
+                        ({{ presc.medication.brand_name }})
+                    {% endif %}
+                    – {{ presc.medication.form }}
+                    {% if presc.medication.strength %}
+                        · {{ presc.medication.strength }}
+                    {% endif %}
+                </div>
+                <div class="list-item-sub">
+                    Dosage: {{ presc.dosage }}<br>
+                    {{ presc.frequency_per_day }}×/day
+                    for {{ presc.duration_days }} days
+                    {% if presc.instructions %}
+                        <br>Instructions: {{ presc.instructions }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="list-item-actions">
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_prescription">
+                    <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                    <input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
+                    <input type="hidden" name="prescription_id" value="{{ presc.prescription_id }}">
+                    <button type="submit" class="btn btn-xs btn-danger">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+
+
                         {% else %}
                             <p class="text-muted">No medications prescribed in this encounter yet.</p>
                         {% endif %}
 
                         <hr class="divider">
 
-                        <h4 class="card-title-xs mb-sm">Add Medication</h4>
-                        <form method="post" class="stacked-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="patient_id" value="{{ patient.id }}">
-                            <input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
-                            <input type="hidden" name="action" value="add_prescription">
 
-                            <div class="form-group">
-                                <label for="id_medication" class="form-label">Medication</label>
-                                <select id="id_medication" name="medication_id" class="input-select" required>
-                                    <option value="">Select medication…</option>
-                                    {% for med in medication_options %}
-                                        <option value="{{ med.medication_id }}">
-                                            {{ med.generic_name }}
-                                            {% if med.brand_name %}
-                                                ({{ med.brand_name }})
-                                            {% endif %}
-                                            {% if med.strength %}
-                                                – {{ med.strength }}
-                                            {% endif %}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+<h4 class="card-title-xs mb-sm">Add Medications (Multiple)</h4>
 
-                            <div class="form-group grid-3-cols">
-                                <div>
-                                    <label for="id_dosage" class="form-label">Dosage</label>
-                                    <input
-                                        type="text"
-                                        id="id_dosage"
-                                        name="dosage"
-                                        class="input-text"
-                                        placeholder="e.g. 1 tablet"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label for="id_frequency" class="form-label">Times per Day</label>
-                                    <input
-                                        type="number"
-                                        id="id_frequency"
-                                        name="frequency_per_day"
-                                        class="input-text"
-                                        min="1"
-                                        value="1"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label for="id_duration" class="form-label">Duration (days)</label>
-                                    <input
-                                        type="number"
-                                        id="id_duration"
-                                        name="duration_days"
-                                        class="input-text"
-                                        min="1"
-                                        value="7"
-                                        required
-                                    />
-                                </div>
-                            </div>
+<form method="post" class="stacked-form">
+    {% csrf_token %}
+    <input type="hidden" name="patient_id" value="{{ patient.id }}">
+    <input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
+    <input type="hidden" name="action" value="batch_add_prescriptions">
 
-                            <div class="form-group">
-                                <label for="id_instructions" class="form-label">Instructions</label>
-                                <input
-                                    type="text"
-                                    id="id_instructions"
-                                    name="instructions"
-                                    class="input-text"
-                                    placeholder="e.g. After meals, avoid alcohol…"
-                                />
-                            </div>
+    <div id="medication-container">
 
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-secondary">
-                                    Add Medication
-                                </button>
-                            </div>
-                        </form>
+        <!-- Row Template -->
+        <div class="med-row mb-md medication-item">
+            <div class="form-group">
+                <label class="form-label">Medication</label>
+                <select name="medication_id[]" class="input-select" required>
+                    <option value="">Select medication…</option>
+                    {% for med in medication_options %}
+                        <option value="{{ med.medication_id }}">
+                            {{ med.generic_name }}
+                            {% if med.brand_name %}({{ med.brand_name }}){% endif %}
+                            {% if med.strength %} – {{ med.strength }}{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group grid-3-cols">
+                <div>
+                    <label class="form-label">Dosage</label>
+                    <input type="text" name="dosage[]" class="input-text" required>
+                </div>
+                <div>
+                    <label class="form-label">Times/day</label>
+                    <input type="number" name="frequency_per_day[]" class="input-text" min="1" value="1" required>
+                </div>
+                <div>
+                    <label class="form-label">Duration (days)</label>
+                    <input type="number" name="duration_days[]" class="input-text" min="1" value="7" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Instructions</label>
+                <input type="text" name="instructions[]" class="input-text">
+            </div>
+
+            <button type="button" class="btn btn-xs btn-danger remove-med-row">Remove</button>
+            <hr>
+        </div>
+
+    </div>
+
+    <button type="button" id="add-med-row" class="btn btn-secondary mb-md">
+        + Add Another Medication
+    </button>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            Submit All
+        </button>
+    </div>
+</form>
+<h4 class="card-title-xs mb-sm">Add Procedures (Multiple)</h4>
+
+<form method="post" class="stacked-form">
+    {% csrf_token %}
+    <input type="hidden" name="patient_id" value="{{ patient.id }}">
+    <input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
+    <input type="hidden" name="action" value="batch_add_procedures">
+
+    <div id="procedure-container">
+
+        <!-- Template row -->
+        <div class="proc-row mb-md procedure-item">
+            <div class="form-group">
+                <label class="form-label">Procedure</label>
+                <select name="procedure_id[]" class="input-select" required>
+                    <option value="">Select procedure…</option>
+                    {% for proc in procedure_options %}
+                        <option value="{{ proc.procedure_id }}">
+                            {{ proc.name }} – {{ proc.unit_price }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" name="quantity[]" class="input-text" min="1" value="1" required>
+            </div>
+
+            <button type="button" class="btn btn-xs btn-danger remove-proc-row">Remove</button>
+            <hr>
+        </div>
+
+    </div>
+
+    <button type="button" id="add-proc-row" class="btn btn-secondary mb-md">+ Add Another Procedure</button>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Submit All</button>
+    </div>
+</form>
+
+
+
+
                     {% else %}
                         <p class="text-muted">
                             Select an encounter to review and prescribe medications.
@@ -446,7 +514,20 @@
                                 <div class="summary-item">
                                     <div class="summary-label">Status</div>
                                     <div class="summary-value">
-                                        <span class="badge">{{ encounter_bill.get_status_display }}</span>
+                                     <form method="post" style="display: inline-block;">
+            				{% csrf_token %}
+            				<input type="hidden" name="patient_id" value="{{ patient.id }}">
+            				<input type="hidden" name="encounter_id" value="{{ active_encounter.encounter_id }}">
+            				<input type="hidden" name="action" value="update_bill_status">
+
+            				<select name="bill_status" class="input-select">
+                				<option value="PENDING" {% if encounter_bill.status == "PENDING" %}selected{% endif %}>Pending</option>
+                				<option value="PAID" {% if encounter_bill.status == "PAID" %}selected{% endif %}>Paid</option>
+                				<option value="CANCELLED" {% if encounter_bill.status == "CANCELLED" %}selected{% endif %}>Cancelled</option>
+            				</select>
+
+            				<button type="submit" class="btn btn-xs btn-primary">Save</button>
+        				</form>   
                                     </div>
                                 </div>
                             </div>
@@ -509,4 +590,83 @@
         </div>
     {% endif %}
 </div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("medication-container");
+    const addButton = document.getElementById("add-med-row");
+
+    // 添加新行
+    addButton.addEventListener("click", function () {
+        const firstRow = container.querySelector(".med-row");
+        const newRow = firstRow.cloneNode(true);
+
+        // 清空内容
+        newRow.querySelectorAll("input").forEach(i => i.value = "");
+        newRow.querySelector("select").value = "";
+
+        container.appendChild(newRow);
+
+        // 删除按钮
+        newRow.querySelector(".remove-med-row").addEventListener("click", function () {
+            if (document.querySelectorAll(".med-row").length > 1) {
+                newRow.remove();
+            }
+        });
+    });
+
+    // 第一行的删除按钮（不能删到 0 行）
+    document.querySelectorAll(".remove-med-row").forEach(btn => {
+        btn.addEventListener("click", function () {
+            if (document.querySelectorAll(".med-row").length > 1) {
+                btn.closest(".med-row").remove();
+            }
+        });
+    });
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* -------------------------- */
+    /*  PROCEDURE - 动态新增行     */
+    /* -------------------------- */
+    const procContainer = document.getElementById("procedure-container");
+    const addProcButton = document.getElementById("add-proc-row");
+
+    addProcButton.addEventListener("click", function () {
+        const firstRow = procContainer.querySelector(".proc-row");
+        const newRow = firstRow.cloneNode(true);
+
+        // 清空内容
+        newRow.querySelector("select").value = "";
+        newRow.querySelector("input[name='quantity[]']").value = 1;
+
+        procContainer.appendChild(newRow);
+
+        // 删除按钮绑定
+        newRow.querySelector(".remove-proc-row").addEventListener("click", function () {
+            if (document.querySelectorAll(".proc-row").length > 1) {
+                newRow.remove();
+            }
+        });
+    });
+
+    // 第一行的删除按钮
+    document.querySelectorAll(".remove-proc-row").forEach(btn => {
+        btn.addEventListener("click", function () {
+            if (document.querySelectorAll(".proc-row").length > 1) {
+                btn.closest(".proc-row").remove();
+            }
+        });
+    });
+
+});
+</script>
+
+
+
 {% endblock %}

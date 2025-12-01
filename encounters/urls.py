@@ -37,4 +37,9 @@ urlpatterns = [
     path('<int:encounter_id>/procedures/add/', views.EncounterProcedureCreateView.as_view(), name='encounter_procedure_add'),
     path('procedures/<int:pk>/edit/', views.EncounterProcedureUpdateView.as_view(), name='encounter_procedure_edit'),
     path('procedures/<int:pk>/delete/', views.EncounterProcedureDeleteView.as_view(), name='encounter_procedure_delete'),
+
+
+    path("create-from-appointment/<int:appointment_id>/",
+     views.create_encounter_from_appointment,
+     name="create_from_appointment"),
 ]

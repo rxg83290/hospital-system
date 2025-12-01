@@ -69,6 +69,15 @@ class AppointmentForm(forms.ModelForm):
             "reason": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
         }
 
+    def clean_appointment_date(self):
+        appointment_date = self.cleaned_data.get("appointment_date")
+        today = datetime.now().date()
+
+        if appointment_date and appointment_date < today:
+            raise ValidationError("You cannot book an appointment in the past.")
+
+        return appointment_date
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -76,13 +85,26 @@ class AppointmentForm(forms.ModelForm):
         appointment_date = cleaned_data.get("appointment_date")
         start_time = cleaned_data.get("start_time")
 
+        # Get current date & time
+        today = datetime.now().date()
+        now_time = datetime.now().time()
+
+        # ---- 1. Prevent past date ----
+        if appointment_date:
+            if appointment_date < today:
+                raise ValidationError("You cannot book an appointment in the past.")
+
+            # ---- 2. Prevent past time slots today ----
+            if appointment_date == today and start_time and start_time < now_time:
+                raise ValidationError("You cannot book a time slot that has already passed today.")
+
+        # ---- 3. Continue with your normal overlap validation ----
         if doctor and appointment_date and start_time:
-            # compute 30-min end time
             dt_start = datetime.combine(appointment_date, start_time)
             end_time = (dt_start + timedelta(minutes=30)).time()
             cleaned_data["computed_end_time"] = end_time
 
-            # check for overlapping appointments for this doctor
+            # check overlap with other appointments
             qs = Appointments.objects.filter(
                 doctor=doctor,
                 appointment_date=appointment_date,
@@ -103,6 +125,7 @@ class AppointmentForm(forms.ModelForm):
 
         return cleaned_data
 
+
     def save(self, commit=True):
         appointment = super().save(commit=False)
 
@@ -118,3 +141,5 @@ class AppointmentForm(forms.ModelForm):
         if commit:
             appointment.save()
         return appointment
+
+
